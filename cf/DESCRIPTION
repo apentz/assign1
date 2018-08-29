@@ -1,0 +1,10 @@
+Package: cf
+Title: Collaborative Filtering Package for Recommender Systems
+Version: 0.0.0.9000
+Date: 2018-09-03
+Authors@R: person("Audrey", "Pentz", email = "audrey.pentz@gmail.com", role = c("aut", "cre"))
+Description: The package covers 3 main Collaborative Filtering techniques used to build Recommender Systems: 1) user based collaborative filtering, 2) item based collaborative filtering and 3) the matrix factorisation technique.
+Depends: R (>= 3.4.3)
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
