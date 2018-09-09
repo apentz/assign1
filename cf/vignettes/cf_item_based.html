@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Audrey Pentz" />
+
+<meta name="date" content="2018-09-04" />
+
+<title>Item Based Collaborative Filtering</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Item Based Collaborative Filtering</h1>
+<h4 class="author"><em>Audrey Pentz</em></h4>
+<h4 class="date"><em>2018-09-04</em></h4>
+
+
+
+<div id="introduction" class="section level3">
+<h3>Introduction</h3>
+<p>Item-Based Collaborative Filtering is 1 of 3 techniques used to build a Recommender System in the cf package. A demonstration of how to use the cf package for Item-Based Collaborative Filtering follows. The demonstration uses a book ratings dataset of 10,000 users that have rated 150 books on a scale from 0 to 10 and is loaded with the package. The package can be used in this way on any similar dataset.</p>
+<p>The objectives of this vignette are as follows:<br />
+- To transform the data into the format required<br />
+- To calculate cosine similarity scores between Items (columns)<br />
+- To make a recommendation for 1 or more existing Users<br />
+- To make a recommendation for a new User</p>
+</div>
+<div id="transform-the-data" class="section level3">
+<h3>1. Transform the data</h3>
+<div id="remove-implicit-zero-ratings-and-nas" class="section level4">
+<h4>1.1. Remove implicit (zero) ratings and NAs</h4>
+<p>We are only going to use the  data. Ratings are on a scale from 0 to 10 but not all readers have rated all books. Zero ratings are called implicit ratings where the reader has read the book but not rated it. A rating from 1 to 10 is called an explicit rating where the reader has actively chosen a rating for the book they have read. So we need to remove the implicit (zero ratings). NAs must also be removed, although this is not applicable to this dataset. The function that does this is called  and can be applied as shown.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+data &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">remove_zeros_blanks</span>(book_ratings)
+<span class="kw">head</span>(data, <span class="dv">10</span>)
+<span class="co">#&gt;    User.ID       ISBN Book.Rating</span>
+<span class="co">#&gt; 1   276925 0385504209           8</span>
+<span class="co">#&gt; 2   277042 0446605484           7</span>
+<span class="co">#&gt; 3   277042 0446611212           8</span>
+<span class="co">#&gt; 4   277042 0971880107           2</span>
+<span class="co">#&gt; 5   277195 0671021001          10</span>
+<span class="co">#&gt; 6   277378 0312195516           7</span>
+<span class="co">#&gt; 7   277378 0446608955           4</span>
+<span class="co">#&gt; 8   277378 0804114986           5</span>
+<span class="co">#&gt; 9   277427 0061009059           9</span>
+<span class="co">#&gt; 10  277427 0316776963           8</span></code></pre></div>
+</div>
+<div id="remove-duplicates" class="section level4">
+<h4>1.2. Remove Duplicates</h4>
+<p>It would make more sense to see the book names rather than ISBNs. In the Exploratory Data Analysis Vignette (EDA) we saw that 2 readers have rated the same book twice. Reader <code>11676</code> has given 2 differet ratings for the same book (<code>the nanny diaries: a novel</code>), 6 and 9. Reader <code>251140</code> has given the same rating for the same book (<code>the nanny diaries: a novel</code>) twice, both rated 10. Therefore, converting from long to wide will fail unless we remove these duplicates from the data first, as shown below.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">library</span>(dplyr)
+
+<span class="co"># identify the duplicates</span>
+book_ratings_with_names &lt;-<span class="st"> </span>data <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(User.ID, ISBN, Book.Title, Book.Rating) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>))
+<span class="co">#&gt; Joining, by = &quot;ISBN&quot;</span>
+book_ratings_with_names[<span class="kw">c</span>(<span class="st">&quot;1008&quot;</span>,<span class="st">&quot;1009&quot;</span>,<span class="st">&quot;16884&quot;</span>,<span class="st">&quot;16885&quot;</span>),]
+<span class="co">#&gt;       User.ID       ISBN                 Book.Title Book.Rating</span>
+<span class="co">#&gt; 1008    11676 0312278586 the nanny diaries: a novel           6</span>
+<span class="co">#&gt; 1009    11676 0312291639 the nanny diaries: a novel           9</span>
+<span class="co">#&gt; 16884  251140 0312278586 the nanny diaries: a novel          10</span>
+<span class="co">#&gt; 16885  251140 0312291639 the nanny diaries: a novel          10</span>
+
+<span class="co"># let's get the average rating for book 'the nanny diaries: a novel'</span>
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(Book.Title, Book.Rating) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Title <span class="op">==</span><span class="st"> 'the nanny diaries: a novel'</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg_bookrating =</span> <span class="kw">mean</span>(Book.Rating))
+<span class="co">#&gt; Joining, by = &quot;ISBN&quot;</span>
+<span class="co">#&gt;   avg_bookrating</span>
+<span class="co">#&gt; 1       7.353741</span>
+
+<span class="co"># let's get the average rating for reader 11676</span>
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(User.ID <span class="op">==</span><span class="st"> '11676'</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg_readerrating =</span> <span class="kw">mean</span>(Book.Rating))
+<span class="co">#&gt;   avg_readerrating</span>
+<span class="co">#&gt; 1          5.04698</span>
+<span class="co"># the mean rating for this book is 7.35 which is closer to 6 than to 9</span>
+<span class="co"># the mean rating for this user is 5.05 which is closer to 6 than to 9</span>
+<span class="co"># so we will discard the second rating for reader 11676</span>
+<span class="co"># reader 251140 gave the same rating so it doesn't matter which is removed</span>
+
+duplicates &lt;-<span class="st"> </span>book_ratings_with_names[<span class="kw">c</span>(<span class="st">&quot;1009&quot;</span>,<span class="st">&quot;16885&quot;</span>),]
+duplicates
+<span class="co">#&gt;       User.ID       ISBN                 Book.Title Book.Rating</span>
+<span class="co">#&gt; 1009    11676 0312291639 the nanny diaries: a novel           9</span>
+<span class="co">#&gt; 16885  251140 0312291639 the nanny diaries: a novel          10</span>
+book_ratings_with_names_deduped &lt;-<span class="st"> </span>book_ratings_with_names <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">anti_join</span>(duplicates) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(User.ID, Book.Title, Book.Rating)
+<span class="co">#&gt; Joining, by = c(&quot;User.ID&quot;, &quot;ISBN&quot;, &quot;Book.Title&quot;, &quot;Book.Rating&quot;)</span></code></pre></div>
+</div>
+<div id="transform-from-long-to-wide" class="section level4">
+<h4>1.3. Transform from long to wide</h4>
+<p>We now need to reshape the data so that we have a matrix with <code>Users</code> (readers in this case) in the rows and <code>Items</code> (books in this case) in the columns, with <code>ratings</code> in the body of the matrix. This is demonstrated with the  function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+data &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">long_to_wide</span>(book_ratings_with_names_deduped, <span class="dt">fill =</span> <span class="dv">0</span>)
+data[<span class="kw">c</span>(<span class="dv">8</span>,<span class="dv">30</span>,<span class="dv">35</span>,<span class="dv">39</span>,<span class="dv">40</span>),<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]
+<span class="co">#&gt;    User.ID 1st to die: a novel 2nd chance a bend in the road</span>
+<span class="co">#&gt; 8      243                   0          0                  0</span>
+<span class="co">#&gt; 30     805                   0          0                  0</span>
+<span class="co">#&gt; 35     900                   0          0                  0</span>
+<span class="co">#&gt; 39    1021                   0          0                  0</span>
+<span class="co">#&gt; 40    1025                   0          0                  0</span>
+<span class="co">#&gt;    a child called \\&quot;it\\&quot;: one child's courage to survive</span>
+<span class="co">#&gt; 8                                                        0</span>
+<span class="co">#&gt; 30                                                       0</span>
+<span class="co">#&gt; 35                                                       0</span>
+<span class="co">#&gt; 39                                                       0</span>
+<span class="co">#&gt; 40                                                       0</span>
+<span class="co">#&gt;    a heartbreaking work of staggering genius</span>
+<span class="co">#&gt; 8                                          0</span>
+<span class="co">#&gt; 30                                         0</span>
+<span class="co">#&gt; 35                                         0</span>
+<span class="co">#&gt; 39                                         0</span>
+<span class="co">#&gt; 40                                         0</span>
+<span class="co">#&gt;    a is for alibi (kinsey millhone mysteries (paperback))</span>
+<span class="co">#&gt; 8                                                       0</span>
+<span class="co">#&gt; 30                                                      0</span>
+<span class="co">#&gt; 35                                                      0</span>
+<span class="co">#&gt; 39                                                      0</span>
+<span class="co">#&gt; 40                                                      0</span>
+<span class="co">#&gt;    a map of the world a painted house a prayer for owen meany</span>
+<span class="co">#&gt; 8                   7               7                       0</span>
+<span class="co">#&gt; 30                  0               0                       0</span>
+<span class="co">#&gt; 35                  0               0                       0</span>
+<span class="co">#&gt; 39                  0               0                       0</span>
+<span class="co">#&gt; 40                  0               0                       0</span></code></pre></div>
+</div>
+<div id="convert-to-matrix-and-remove-column-1-userid" class="section level4">
+<h4>1.4. Convert to matrix and remove column 1 (UserID)</h4>
+<p>We now need to reshape the data so that we have a matrix with <code>Users</code> (readers in this case) as the rownames and <code>Items</code> (books in this case) as the column names, with <code>ratings</code> in the body of the matrix. This is demonstrated with the  function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+data &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">convert_to_matrix</span>(data)
+
+<span class="co"># let's take a look at ratings for a for a selection of readers and books</span>
+demo &lt;-<span class="st"> </span>data[<span class="kw">c</span>(<span class="st">&quot;23872&quot;</span>,<span class="st">&quot;63360&quot;</span>,<span class="st">&quot;98783&quot;</span>,<span class="st">&quot;16795&quot;</span>, <span class="st">&quot;11676&quot;</span>),
+     <span class="kw">c</span>(<span class="st">&quot;1st to die: a novel&quot;</span>,<span class="st">&quot;angela's ashes&quot;</span>, <span class="st">&quot;black and blue&quot;</span>,
+       <span class="st">&quot;fahrenheit 451&quot;</span>, <span class="st">&quot;hannibal&quot;</span>, <span class="st">&quot;silence of the lambs&quot;</span>,
+       <span class="st">&quot;interview with the vampire&quot;</span>, <span class="st">&quot;stones from the river&quot;</span>, 
+       <span class="st">&quot;the fellowship of the ring (the lord of the rings, part 1)&quot;</span>,
+       <span class="st">&quot;the horse whisperer&quot;</span>,<span class="st">&quot;the vampire lestat (vampire chronicles, book ii)&quot;</span>)]
+<span class="co"># let's transpose it to make it easier to display</span>
+<span class="kw">t</span>(demo)
+<span class="co">#&gt;                                                            23872 63360</span>
+<span class="co">#&gt; 1st to die: a novel                                            0     0</span>
+<span class="co">#&gt; angela's ashes                                                 0     0</span>
+<span class="co">#&gt; black and blue                                                 0     0</span>
+<span class="co">#&gt; fahrenheit 451                                                 9     0</span>
+<span class="co">#&gt; hannibal                                                       0     0</span>
+<span class="co">#&gt; silence of the lambs                                          10     9</span>
+<span class="co">#&gt; interview with the vampire                                     9     9</span>
+<span class="co">#&gt; stones from the river                                          8     0</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)    10    10</span>
+<span class="co">#&gt; the horse whisperer                                            0     0</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)              10     8</span>
+<span class="co">#&gt;                                                            98783 16795</span>
+<span class="co">#&gt; 1st to die: a novel                                            0     9</span>
+<span class="co">#&gt; angela's ashes                                                 0     7</span>
+<span class="co">#&gt; black and blue                                                 0     5</span>
+<span class="co">#&gt; fahrenheit 451                                                 0     8</span>
+<span class="co">#&gt; hannibal                                                       0     5</span>
+<span class="co">#&gt; silence of the lambs                                           0     0</span>
+<span class="co">#&gt; interview with the vampire                                     8     0</span>
+<span class="co">#&gt; stones from the river                                          0     7</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)     9     8</span>
+<span class="co">#&gt; the horse whisperer                                            0     9</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)               8     0</span>
+<span class="co">#&gt;                                                            11676</span>
+<span class="co">#&gt; 1st to die: a novel                                           10</span>
+<span class="co">#&gt; angela's ashes                                                 7</span>
+<span class="co">#&gt; black and blue                                                 7</span>
+<span class="co">#&gt; fahrenheit 451                                                 0</span>
+<span class="co">#&gt; hannibal                                                       8</span>
+<span class="co">#&gt; silence of the lambs                                           0</span>
+<span class="co">#&gt; interview with the vampire                                     6</span>
+<span class="co">#&gt; stones from the river                                          4</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)     0</span>
+<span class="co">#&gt; the horse whisperer                                            1</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)               8</span></code></pre></div>
+</div>
+</div>
+<div id="calculate-cosine-similarity-scores-between-items" class="section level3">
+<h3>2. Calculate Cosine Similarity Scores between Items</h3>
+<p>The cf package uses cosine similarity to calculate similarity scores between pairs of Items (books in this case). This is done using the  function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># calculate cosine similarity scores for all items</span>
+item_sims &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">item_similarities</span>(data)
+
+<span class="co"># let's look at the scores for a few items</span>
+ix &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;1st to die: a novel&quot;</span>,<span class="st">&quot;angela's ashes&quot;</span>, <span class="st">&quot;black and blue&quot;</span>,
+       <span class="st">&quot;fahrenheit 451&quot;</span>, <span class="st">&quot;hannibal&quot;</span>, <span class="st">&quot;silence of the lambs&quot;</span>,
+       <span class="st">&quot;interview with the vampire&quot;</span>, <span class="st">&quot;stones from the river&quot;</span>, 
+       <span class="st">&quot;the fellowship of the ring (the lord of the rings, part 1)&quot;</span>,
+       <span class="st">&quot;the horse whisperer&quot;</span>,<span class="st">&quot;the vampire lestat (vampire chronicles, book ii)&quot;</span>)
+item_sims[ix,ix]
+<span class="co">#&gt;                                                            1st to die: a novel</span>
+<span class="co">#&gt; 1st to die: a novel                                                 0.00000000</span>
+<span class="co">#&gt; angela's ashes                                                      0.03089965</span>
+<span class="co">#&gt; black and blue                                                      0.04768405</span>
+<span class="co">#&gt; fahrenheit 451                                                      0.03610555</span>
+<span class="co">#&gt; hannibal                                                            0.06046136</span>
+<span class="co">#&gt; silence of the lambs                                                0.02787711</span>
+<span class="co">#&gt; interview with the vampire                                          0.01630363</span>
+<span class="co">#&gt; stones from the river                                               0.03588961</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)          0.02600240</span>
+<span class="co">#&gt; the horse whisperer                                                 0.01219057</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)                    0.02802118</span>
+<span class="co">#&gt;                                                            angela's ashes</span>
+<span class="co">#&gt; 1st to die: a novel                                           0.030899654</span>
+<span class="co">#&gt; angela's ashes                                                0.000000000</span>
+<span class="co">#&gt; black and blue                                                0.021440013</span>
+<span class="co">#&gt; fahrenheit 451                                                0.030708417</span>
+<span class="co">#&gt; hannibal                                                      0.017467595</span>
+<span class="co">#&gt; silence of the lambs                                          0.009517228</span>
+<span class="co">#&gt; interview with the vampire                                    0.027190704</span>
+<span class="co">#&gt; stones from the river                                         0.100752740</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)    0.043877419</span>
+<span class="co">#&gt; the horse whisperer                                           0.009737670</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)              0.016610014</span>
+<span class="co">#&gt;                                                            black and blue</span>
+<span class="co">#&gt; 1st to die: a novel                                           0.047684055</span>
+<span class="co">#&gt; angela's ashes                                                0.021440013</span>
+<span class="co">#&gt; black and blue                                                0.000000000</span>
+<span class="co">#&gt; fahrenheit 451                                                0.017956266</span>
+<span class="co">#&gt; hannibal                                                      0.074802729</span>
+<span class="co">#&gt; silence of the lambs                                          0.030268240</span>
+<span class="co">#&gt; interview with the vampire                                    0.011609517</span>
+<span class="co">#&gt; stones from the river                                         0.048672957</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)    0.006735258</span>
+<span class="co">#&gt; the horse whisperer                                           0.039911397</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)              0.009145296</span>
+<span class="co">#&gt;                                                            fahrenheit 451</span>
+<span class="co">#&gt; 1st to die: a novel                                            0.03610555</span>
+<span class="co">#&gt; angela's ashes                                                 0.03070842</span>
+<span class="co">#&gt; black and blue                                                 0.01795627</span>
+<span class="co">#&gt; fahrenheit 451                                                 0.00000000</span>
+<span class="co">#&gt; hannibal                                                       0.00621056</span>
+<span class="co">#&gt; silence of the lambs                                           0.04496025</span>
+<span class="co">#&gt; interview with the vampire                                     0.02117202</span>
+<span class="co">#&gt; stones from the river                                          0.06689112</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)     0.04534592</span>
+<span class="co">#&gt; the horse whisperer                                            0.00943698</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)               0.03792547</span>
+<span class="co">#&gt;                                                              hannibal</span>
+<span class="co">#&gt; 1st to die: a novel                                        0.06046136</span>
+<span class="co">#&gt; angela's ashes                                             0.01746760</span>
+<span class="co">#&gt; black and blue                                             0.07480273</span>
+<span class="co">#&gt; fahrenheit 451                                             0.00621056</span>
+<span class="co">#&gt; hannibal                                                   0.00000000</span>
+<span class="co">#&gt; silence of the lambs                                       0.12449394</span>
+<span class="co">#&gt; interview with the vampire                                 0.06598642</span>
+<span class="co">#&gt; stones from the river                                      0.01977899</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1) 0.01223005</span>
+<span class="co">#&gt; the horse whisperer                                        0.01723906</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)           0.03700823</span>
+<span class="co">#&gt;                                                            silence of the lambs</span>
+<span class="co">#&gt; 1st to die: a novel                                                 0.027877111</span>
+<span class="co">#&gt; angela's ashes                                                      0.009517228</span>
+<span class="co">#&gt; black and blue                                                      0.030268240</span>
+<span class="co">#&gt; fahrenheit 451                                                      0.044960245</span>
+<span class="co">#&gt; hannibal                                                            0.124493935</span>
+<span class="co">#&gt; silence of the lambs                                                0.000000000</span>
+<span class="co">#&gt; interview with the vampire                                          0.100492621</span>
+<span class="co">#&gt; stones from the river                                               0.028469002</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)          0.036624840</span>
+<span class="co">#&gt; the horse whisperer                                                 0.020378340</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)                    0.148936545</span>
+<span class="co">#&gt;                                                            interview with the vampire</span>
+<span class="co">#&gt; 1st to die: a novel                                                        0.01630363</span>
+<span class="co">#&gt; angela's ashes                                                             0.02719070</span>
+<span class="co">#&gt; black and blue                                                             0.01160952</span>
+<span class="co">#&gt; fahrenheit 451                                                             0.02117202</span>
+<span class="co">#&gt; hannibal                                                                   0.06598642</span>
+<span class="co">#&gt; silence of the lambs                                                       0.10049262</span>
+<span class="co">#&gt; interview with the vampire                                                 0.00000000</span>
+<span class="co">#&gt; stones from the river                                                      0.02486116</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)                 0.02914045</span>
+<span class="co">#&gt; the horse whisperer                                                        0.02180694</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)                           0.35342987</span>
+<span class="co">#&gt;                                                            stones from the river</span>
+<span class="co">#&gt; 1st to die: a novel                                                   0.03588961</span>
+<span class="co">#&gt; angela's ashes                                                        0.10075274</span>
+<span class="co">#&gt; black and blue                                                        0.04867296</span>
+<span class="co">#&gt; fahrenheit 451                                                        0.06689112</span>
+<span class="co">#&gt; hannibal                                                              0.01977899</span>
+<span class="co">#&gt; silence of the lambs                                                  0.02846900</span>
+<span class="co">#&gt; interview with the vampire                                            0.02486116</span>
+<span class="co">#&gt; stones from the river                                                 0.00000000</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)            0.01907067</span>
+<span class="co">#&gt; the horse whisperer                                                   0.07786650</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)                      0.01523213</span>
+<span class="co">#&gt;                                                            the fellowship of the ring (the lord of the rings, part 1)</span>
+<span class="co">#&gt; 1st to die: a novel                                                                                       0.026002398</span>
+<span class="co">#&gt; angela's ashes                                                                                            0.043877419</span>
+<span class="co">#&gt; black and blue                                                                                            0.006735258</span>
+<span class="co">#&gt; fahrenheit 451                                                                                            0.045345918</span>
+<span class="co">#&gt; hannibal                                                                                                  0.012230051</span>
+<span class="co">#&gt; silence of the lambs                                                                                      0.036624840</span>
+<span class="co">#&gt; interview with the vampire                                                                                0.029140448</span>
+<span class="co">#&gt; stones from the river                                                                                     0.019070668</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)                                                0.000000000</span>
+<span class="co">#&gt; the horse whisperer                                                                                       0.017344721</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)                                                          0.053028756</span>
+<span class="co">#&gt;                                                            the horse whisperer</span>
+<span class="co">#&gt; 1st to die: a novel                                                 0.01219057</span>
+<span class="co">#&gt; angela's ashes                                                      0.00973767</span>
+<span class="co">#&gt; black and blue                                                      0.03991140</span>
+<span class="co">#&gt; fahrenheit 451                                                      0.00943698</span>
+<span class="co">#&gt; hannibal                                                            0.01723906</span>
+<span class="co">#&gt; silence of the lambs                                                0.02037834</span>
+<span class="co">#&gt; interview with the vampire                                          0.02180694</span>
+<span class="co">#&gt; stones from the river                                               0.07786650</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)          0.01734472</span>
+<span class="co">#&gt; the horse whisperer                                                 0.00000000</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)                    0.01962590</span>
+<span class="co">#&gt;                                                            the vampire lestat (vampire chronicles, book ii)</span>
+<span class="co">#&gt; 1st to die: a novel                                                                             0.028021176</span>
+<span class="co">#&gt; angela's ashes                                                                                  0.016610014</span>
+<span class="co">#&gt; black and blue                                                                                  0.009145296</span>
+<span class="co">#&gt; fahrenheit 451                                                                                  0.037925475</span>
+<span class="co">#&gt; hannibal                                                                                        0.037008231</span>
+<span class="co">#&gt; silence of the lambs                                                                            0.148936545</span>
+<span class="co">#&gt; interview with the vampire                                                                      0.353429875</span>
+<span class="co">#&gt; stones from the river                                                                           0.015232125</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)                                      0.053028756</span>
+<span class="co">#&gt; the horse whisperer                                                                             0.019625900</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)                                                0.000000000</span>
+
+<span class="kw">dim</span>(item_sims)
+<span class="co">#&gt; [1] 149 149</span></code></pre></div>
+<p>We can also have a look at which books are most similar, like this:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># which books are the most similar to a given book?</span>
+<span class="kw">head</span>(<span class="kw">sort</span>(item_sims[<span class="st">&quot;1st to die: a novel&quot;</span>,], <span class="dt">decreasing =</span> <span class="ot">TRUE</span>),<span class="dv">3</span>)
+<span class="co">#&gt; roses are red (alex cross novels)                        2nd chance </span>
+<span class="co">#&gt;                         0.1879269                         0.1718094 </span>
+<span class="co">#&gt;                    kiss the girls </span>
+<span class="co">#&gt;                         0.1479415</span>
+<span class="kw">head</span>(<span class="kw">sort</span>(item_sims[<span class="st">&quot;angela's ashes&quot;</span>,], <span class="dt">decreasing =</span> <span class="ot">TRUE</span>),<span class="dv">3</span>)
+<span class="co">#&gt;                             stones from the river </span>
+<span class="co">#&gt;                                        0.10075274 </span>
+<span class="co">#&gt; she's come undone (oprah's book club (paperback)) </span>
+<span class="co">#&gt;                                        0.07585671 </span>
+<span class="co">#&gt;               the red tent (bestselling backlist) </span>
+<span class="co">#&gt;                                        0.06292046</span>
+<span class="kw">head</span>(<span class="kw">sort</span>(item_sims[<span class="st">&quot;black and blue&quot;</span>,], <span class="dt">decreasing =</span> <span class="ot">TRUE</span>),<span class="dv">3</span>)
+<span class="co">#&gt; songs in ordinary time (oprah's book club (paperback)) </span>
+<span class="co">#&gt;                                             0.08873437 </span>
+<span class="co">#&gt;                                    the prince of tides </span>
+<span class="co">#&gt;                                             0.07932201 </span>
+<span class="co">#&gt;                                  house of sand and fog </span>
+<span class="co">#&gt;                                             0.07576866</span>
+<span class="kw">head</span>(<span class="kw">sort</span>(item_sims[<span class="st">&quot;fahrenheit 451&quot;</span>,], <span class="dt">decreasing =</span> <span class="ot">TRUE</span>),<span class="dv">3</span>)
+<span class="co">#&gt;  to kill a mockingbird the catcher in the rye      lord of the flies </span>
+<span class="co">#&gt;             0.10057486             0.09557111             0.07840212</span>
+<span class="kw">head</span>(<span class="kw">sort</span>(item_sims[<span class="st">&quot;hannibal&quot;</span>,], <span class="dt">decreasing =</span> <span class="ot">TRUE</span>),<span class="dv">3</span>)
+<span class="co">#&gt;           red dragon silence of the lambs        jurassic park </span>
+<span class="co">#&gt;            0.1745688            0.1244939            0.1011568</span>
+<span class="kw">head</span>(<span class="kw">sort</span>(item_sims[<span class="st">&quot;silence of the lambs&quot;</span>,], <span class="dt">decreasing =</span> <span class="ot">TRUE</span>),<span class="dv">3</span>)
+<span class="co">#&gt;                                       red dragon </span>
+<span class="co">#&gt;                                        0.2352533 </span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii) </span>
+<span class="co">#&gt;                                        0.1489365 </span>
+<span class="co">#&gt;                                    jurassic park </span>
+<span class="co">#&gt;                                        0.1461248</span></code></pre></div>
+<p>We may also be interested in which books a given user has read and which books a given user has rated:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># data including the implicit ratings which have been read but not rated</span>
+book_ratings_read &lt;-<span class="st"> </span>book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(User.ID, Book.Title, Book.Rating)
+<span class="co">#&gt; Joining, by = &quot;ISBN&quot;</span>
+book_ratings_read<span class="op">$</span>Book.Rating &lt;-<span class="st"> </span><span class="dv">1</span>                         <span class="co"># make all ratings 1 to indicate read</span>
+book_ratings_read &lt;-<span class="st"> </span><span class="kw">unique</span>(book_ratings_read)             <span class="co"># remove dupilcates</span>
+<span class="co"># wide format</span>
+data_read &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">long_to_wide</span>(book_ratings_read, <span class="dt">fill =</span> <span class="dv">0</span>)
+<span class="co"># matrix format</span>
+data_read &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">convert_to_matrix</span>(data_read)
+
+
+<span class="co"># which books has a given reader read?</span>
+user &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;23872&quot;</span>)
+user_read &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data_read[user,] <span class="op">==</span><span class="st"> </span><span class="dv">1</span>]
+user_read[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]
+<span class="co">#&gt;  [1] &quot;a child called \\\&quot;it\\\&quot;: one child's courage to survive&quot;       </span>
+<span class="co">#&gt;  [2] &quot;a prayer for owen meany&quot;                                         </span>
+<span class="co">#&gt;  [3] &quot;a time to kill&quot;                                                  </span>
+<span class="co">#&gt;  [4] &quot;fahrenheit 451&quot;                                                  </span>
+<span class="co">#&gt;  [5] &quot;harry potter and the sorcerer's stone (harry potter (paperback))&quot;</span>
+<span class="co">#&gt;  [6] &quot;interview with the vampire&quot;                                      </span>
+<span class="co">#&gt;  [7] &quot;message in a bottle&quot;                                             </span>
+<span class="co">#&gt;  [8] &quot;silence of the lambs&quot;                                            </span>
+<span class="co">#&gt;  [9] &quot;stones from the river&quot;                                           </span>
+<span class="co">#&gt; [10] &quot;the fellowship of the ring (the lord of the rings, part 1)&quot;</span>
+<span class="kw">length</span>(user_read)
+<span class="co">#&gt; [1] 11</span>
+<span class="co"># which books has a given reader rated?</span>
+user_rated &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data[user,] <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>)]
+user_rated[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>]
+<span class="co">#&gt;  [1] &quot;a child called \\\&quot;it\\\&quot;: one child's courage to survive&quot; </span>
+<span class="co">#&gt;  [2] &quot;a prayer for owen meany&quot;                                   </span>
+<span class="co">#&gt;  [3] &quot;a time to kill&quot;                                            </span>
+<span class="co">#&gt;  [4] &quot;fahrenheit 451&quot;                                            </span>
+<span class="co">#&gt;  [5] &quot;interview with the vampire&quot;                                </span>
+<span class="co">#&gt;  [6] &quot;message in a bottle&quot;                                       </span>
+<span class="co">#&gt;  [7] &quot;silence of the lambs&quot;                                      </span>
+<span class="co">#&gt;  [8] &quot;stones from the river&quot;                                     </span>
+<span class="co">#&gt;  [9] &quot;the fellowship of the ring (the lord of the rings, part 1)&quot;</span>
+<span class="co">#&gt; [10] &quot;the vampire lestat (vampire chronicles, book ii)&quot;</span>
+<span class="kw">length</span>(user_rated)
+<span class="co">#&gt; [1] 10</span>
+
+
+<span class="co"># which books has a given reader read?</span>
+user &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;63360&quot;</span>)
+user_read &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data_read[user,] <span class="op">==</span><span class="st"> </span><span class="dv">1</span>]
+<span class="co">#user_read[1:10]</span>
+<span class="kw">length</span>(user_read)
+<span class="co">#&gt; [1] 4</span>
+<span class="co"># which books has a given reader rated?</span>
+user_rated &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data[user,] <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>)]
+<span class="co"># user_rated[1:10]</span>
+<span class="kw">length</span>(user_rated)
+<span class="co">#&gt; [1] 4</span>
+
+<span class="co"># which books has a given reader read?</span>
+user &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;98783&quot;</span>)
+user_read &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data_read[user,] <span class="op">==</span><span class="st"> </span><span class="dv">1</span>]
+<span class="co"># user_read[1:10]</span>
+<span class="kw">length</span>(user_read)
+<span class="co">#&gt; [1] 5</span>
+<span class="co"># which books has a given reader rated?</span>
+user_rated &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data[user,] <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>)]
+<span class="co"># user_rated[1:10]</span>
+<span class="kw">length</span>(user_rated)
+<span class="co">#&gt; [1] 4</span>
+
+
+<span class="co"># which books has a given reader read?</span>
+user &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;16795&quot;</span>)
+user_read &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data_read[user,] <span class="op">==</span><span class="st"> </span><span class="dv">1</span>]
+<span class="co"># user_read[1:10]</span>
+<span class="kw">length</span>(user_read)
+<span class="co">#&gt; [1] 98</span>
+<span class="co"># which books has a given reader rated?</span>
+user_rated &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data[user,] <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>)]
+<span class="co"># user_rated[1:10]</span>
+<span class="kw">length</span>(user_rated)
+<span class="co">#&gt; [1] 56</span>
+
+
+<span class="co"># which books has a given reader read?</span>
+user &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;11676&quot;</span>)
+user_read &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data_read[user,] <span class="op">==</span><span class="st"> </span><span class="dv">1</span>]
+<span class="co"># user_read[1:10]</span>
+<span class="kw">length</span>(user_read)
+<span class="co">#&gt; [1] 148</span>
+<span class="co"># which books has a given reader rated?</span>
+user_rated &lt;-<span class="st"> </span><span class="kw">row.names</span>(item_sims)[data[user,] <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>)]
+<span class="co"># user_rated[1:10]</span>
+<span class="kw">length</span>(user_rated)
+<span class="co">#&gt; [1] 95</span></code></pre></div>
+</div>
+<div id="make-a-prediction-for-1-or-more-users" class="section level3">
+<h3>3. Make a prediction for 1 or more Users</h3>
+<p>Now that we have the similarity scores for every pair of Iteams (books), we can see which Iteams are similar to other Items in the dataset.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+item_predictions &lt;-<span class="st"> </span><span class="kw">item_predict</span>(<span class="dt">user =</span> <span class="st">&quot;23872&quot;</span>,
+                                 <span class="dt">item_similarities =</span> item_sims,
+                                 <span class="dt">ratings_wide =</span> data_read, 
+                                 <span class="dt">predict_n =</span> <span class="dv">10</span>)
+item_predictions
+<span class="co">#&gt; # A tibble: 10 x 2</span>
+<span class="co">#&gt;    title                                                        score</span>
+<span class="co">#&gt;    &lt;chr&gt;                                                        &lt;dbl&gt;</span>
+<span class="co">#&gt;  1 the queen of the damned (vampire chronicles (paperback))     1.03 </span>
+<span class="co">#&gt;  2 harry potter and the chamber of secrets (book 2)             0.701</span>
+<span class="co">#&gt;  3 the client                                                   0.675</span>
+<span class="co">#&gt;  4 the pelican brief                                            0.667</span>
+<span class="co">#&gt;  5 jurassic park                                                0.654</span>
+<span class="co">#&gt;  6 the firm                                                     0.649</span>
+<span class="co">#&gt;  7 red dragon                                                   0.606</span>
+<span class="co">#&gt;  8 the hobbit : the enchanting prelude to the lord of the rings 0.590</span>
+<span class="co">#&gt;  9 harry potter and the order of the phoenix (book 5)           0.560</span>
+<span class="co">#&gt; 10 the witching hour (lives of the mayfair witches)             0.550</span></code></pre></div>
+<p>Let’s look at recommendations for all of the demo users chosen above</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">lapply</span>(<span class="kw">c</span>(<span class="st">&quot;23872&quot;</span>,<span class="st">&quot;63360&quot;</span>,<span class="st">&quot;98783&quot;</span>,<span class="st">&quot;16795&quot;</span>, <span class="st">&quot;11676&quot;</span>), item_predict, item_sims, data_read, <span class="dv">10</span>)
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt; # A tibble: 10 x 2</span>
+<span class="co">#&gt;    title                                                        score</span>
+<span class="co">#&gt;    &lt;chr&gt;                                                        &lt;dbl&gt;</span>
+<span class="co">#&gt;  1 the queen of the damned (vampire chronicles (paperback))     1.03 </span>
+<span class="co">#&gt;  2 harry potter and the chamber of secrets (book 2)             0.701</span>
+<span class="co">#&gt;  3 the client                                                   0.675</span>
+<span class="co">#&gt;  4 the pelican brief                                            0.667</span>
+<span class="co">#&gt;  5 jurassic park                                                0.654</span>
+<span class="co">#&gt;  6 the firm                                                     0.649</span>
+<span class="co">#&gt;  7 red dragon                                                   0.606</span>
+<span class="co">#&gt;  8 the hobbit : the enchanting prelude to the lord of the rings 0.590</span>
+<span class="co">#&gt;  9 harry potter and the order of the phoenix (book 5)           0.560</span>
+<span class="co">#&gt; 10 the witching hour (lives of the mayfair witches)             0.550</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[2]]</span>
+<span class="co">#&gt; # A tibble: 10 x 2</span>
+<span class="co">#&gt;    title                                                            score</span>
+<span class="co">#&gt;    &lt;chr&gt;                                                            &lt;dbl&gt;</span>
+<span class="co">#&gt;  1 the queen of the damned (vampire chronicles (paperback))         0.911</span>
+<span class="co">#&gt;  2 the witching hour (lives of the mayfair witches)                 0.420</span>
+<span class="co">#&gt;  3 the hobbit : the enchanting prelude to the lord of the rings     0.370</span>
+<span class="co">#&gt;  4 red dragon                                                       0.367</span>
+<span class="co">#&gt;  5 jurassic park                                                    0.311</span>
+<span class="co">#&gt;  6 a time to kill                                                   0.283</span>
+<span class="co">#&gt;  7 hannibal                                                         0.240</span>
+<span class="co">#&gt;  8 kiss the girls                                                   0.235</span>
+<span class="co">#&gt;  9 the firm                                                         0.234</span>
+<span class="co">#&gt; 10 harry potter and the sorcerer's stone (harry potter (paperback)) 0.232</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[3]]</span>
+<span class="co">#&gt; # A tibble: 10 x 2</span>
+<span class="co">#&gt;    title                                                            score</span>
+<span class="co">#&gt;    &lt;chr&gt;                                                            &lt;dbl&gt;</span>
+<span class="co">#&gt;  1 silence of the lambs                                             0.432</span>
+<span class="co">#&gt;  2 the hobbit : the enchanting prelude to the lord of the rings     0.412</span>
+<span class="co">#&gt;  3 a time to kill                                                   0.269</span>
+<span class="co">#&gt;  4 the catcher in the rye                                           0.251</span>
+<span class="co">#&gt;  5 jurassic park                                                    0.250</span>
+<span class="co">#&gt;  6 the bad beginning (a series of unfortunate events, book 1)       0.248</span>
+<span class="co">#&gt;  7 watership down                                                   0.247</span>
+<span class="co">#&gt;  8 harry potter and the sorcerer's stone (harry potter (paperback)) 0.239</span>
+<span class="co">#&gt;  9 the handmaid's tale                                              0.231</span>
+<span class="co">#&gt; 10 the firm                                                         0.225</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[4]]</span>
+<span class="co">#&gt; # A tibble: 10 x 2</span>
+<span class="co">#&gt;    title                                                            score</span>
+<span class="co">#&gt;    &lt;chr&gt;                                                            &lt;dbl&gt;</span>
+<span class="co">#&gt;  1 bridget jones's diary                                             4.19</span>
+<span class="co">#&gt;  2 i know this much is true                                          3.96</span>
+<span class="co">#&gt;  3 balzac and the little chinese seamstress : a novel                3.70</span>
+<span class="co">#&gt;  4 to kill a mockingbird                                             3.69</span>
+<span class="co">#&gt;  5 wicked: the life and times of the wicked witch of the west        3.66</span>
+<span class="co">#&gt;  6 she's come undone (oprah's book club (paperback))                 3.65</span>
+<span class="co">#&gt;  7 the brethren                                                      3.65</span>
+<span class="co">#&gt;  8 b is for burglar (kinsey millhone mysteries (paperback))          3.58</span>
+<span class="co">#&gt;  9 the girls' guide to hunting and fishing                           3.56</span>
+<span class="co">#&gt; 10 harry potter and the sorcerer's stone (harry potter (paperback))  3.55</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[5]]</span>
+<span class="co">#&gt; # A tibble: 10 x 2</span>
+<span class="co">#&gt;    title             score</span>
+<span class="co">#&gt;    &lt;chr&gt;             &lt;dbl&gt;</span>
+<span class="co">#&gt;  1 girl, interrupted  4.58</span>
+<span class="co">#&gt;  2 &lt;NA&gt;              NA   </span>
+<span class="co">#&gt;  3 &lt;NA&gt;              NA   </span>
+<span class="co">#&gt;  4 &lt;NA&gt;              NA   </span>
+<span class="co">#&gt;  5 &lt;NA&gt;              NA   </span>
+<span class="co">#&gt;  6 &lt;NA&gt;              NA   </span>
+<span class="co">#&gt;  7 &lt;NA&gt;              NA   </span>
+<span class="co">#&gt;  8 &lt;NA&gt;              NA   </span>
+<span class="co">#&gt;  9 &lt;NA&gt;              NA   </span>
+<span class="co">#&gt; 10 &lt;NA&gt;              NA</span></code></pre></div>
+</div>
+<div id="make-a-prediction-for-a-new-user" class="section level3">
+<h3>4. Make a prediction for a new User</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># create data for new users</span>
+users_new &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">User.ID =</span> (<span class="kw">rep</span>(<span class="kw">max</span>(book_ratings_with_names_deduped<span class="op">$</span>User.ID)<span class="op">+</span><span class="dv">1</span>,<span class="dv">3</span>)), 
+                        <span class="dt">ISBN =</span> <span class="kw">c</span>(<span class="st">&quot;0440234743&quot;</span>, <span class="st">&quot;0971880107&quot;</span>, <span class="st">&quot;0345417623&quot;</span>), 
+                        <span class="dt">Book.Rating =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">3</span>))
+<span class="co"># get the User.ID of the new user </span>
+<span class="kw">max</span>(book_ratings_with_names_deduped<span class="op">$</span>User.ID)<span class="op">+</span><span class="dv">1</span>
+<span class="co">#&gt; [1] 278844</span>
+<span class="co">#&quot;278844&quot;</span>
+
+<span class="co"># remove ISBN and add Book.Title </span>
+users_new &lt;-<span class="st"> </span>users_new <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info, <span class="dt">by =</span> <span class="st">&quot;ISBN&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(User.ID,Book.Title,Book.Rating)
+<span class="co">#&gt; Warning: Column `ISBN` joining factor and character vector, coercing into</span>
+<span class="co">#&gt; character vector</span>
+
+<span class="co"># attach the new user to the data</span>
+book_ratings_new &lt;-<span class="st"> </span><span class="kw">rbind</span>(book_ratings_with_names_deduped, users_new)
+
+<span class="co"># reshape the data from long to wide</span>
+book_ratings_new_wide &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">long_to_wide</span>(book_ratings_new, <span class="dt">fill =</span> <span class="dv">0</span>)
+
+<span class="co"># convert to matrix</span>
+book_ratings_new_wide &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">convert_to_matrix</span>(book_ratings_new_wide)
+
+<span class="co"># recalculate similarities</span>
+item_sims_new &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">item_similarities</span>(book_ratings_new_wide)
+
+<span class="co"># data including the implicit ratings which have been read but not rated</span>
+books_read_new &lt;-<span class="st"> </span>book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(User.ID, Book.Title, Book.Rating)
+<span class="co">#&gt; Joining, by = &quot;ISBN&quot;</span>
+books_read_new<span class="op">$</span>Book.Rating &lt;-<span class="st"> </span><span class="dv">1</span>                         <span class="co"># make all ratings 1 to indicate read</span>
+books_read_new &lt;-<span class="st"> </span><span class="kw">unique</span>(books_read_new)                <span class="co"># remove dupilcates</span>
+<span class="co"># attach the new user to the data</span>
+books_read_new &lt;-<span class="st"> </span><span class="kw">rbind</span>(books_read_new, users_new)
+books_read_new<span class="op">$</span>Book.Rating &lt;-<span class="st"> </span><span class="dv">1</span>                         <span class="co"># make all ratings 1 to indicate read</span>
+<span class="co"># wide format</span>
+books_read_new &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">long_to_wide</span>(books_read_new, <span class="dt">fill =</span> <span class="dv">0</span>)
+<span class="co"># matrix format</span>
+books_read_new &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">convert_to_matrix</span>(books_read_new)
+
+<span class="co"># generate predictions</span>
+item_predictions_new &lt;-<span class="st"> </span><span class="kw">item_predict</span>(<span class="dt">user =</span> <span class="st">&quot;278844&quot;</span>,
+                                 <span class="dt">item_similarities =</span> item_sims_new,
+                                 <span class="dt">ratings_wide =</span> books_read_new, 
+                                 <span class="dt">predict_n =</span> <span class="dv">10</span>)
+item_predictions_new
+<span class="co">#&gt; # A tibble: 10 x 2</span>
+<span class="co">#&gt;    title               score</span>
+<span class="co">#&gt;    &lt;chr&gt;               &lt;dbl&gt;</span>
+<span class="co">#&gt;  1 the summons         0.177</span>
+<span class="co">#&gt;  2 the street lawyer   0.177</span>
+<span class="co">#&gt;  3 the runaway jury    0.173</span>
+<span class="co">#&gt;  4 the da vinci code   0.166</span>
+<span class="co">#&gt;  5 the partner         0.159</span>
+<span class="co">#&gt;  6 a painted house     0.159</span>
+<span class="co">#&gt;  7 the prince of tides 0.155</span>
+<span class="co">#&gt;  8 kiss the girls      0.154</span>
+<span class="co">#&gt;  9 jurassic park       0.140</span>
+<span class="co">#&gt; 10 from potter's field 0.140</span></code></pre></div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

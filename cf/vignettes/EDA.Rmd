@@ -1,0 +1,269 @@
+---
+title: "Exploratory Data Analysis (EDA)"
+author: "Audrey Pentz"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Exploratory Data Analysis (EDA)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+# load packages
+library(cf)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+```
+
+
+### Objectives
+
+The objective of this vignette is to do an exploratory data analysis (EDA) on the Book Ratings data included in this package in order to showcase the kind of issues one may face when trying to shape the data into the format required by any of the 3 collaborative filtering methods. Each of the 3 collaborative filtering methods have their own vignette as well.
+
+
+### Let's have a look at some data.
+
+```{r transform}
+
+dplyr::glimpse(book_ratings)
+dplyr::glimpse(book_info)
+dplyr::glimpse(user_info)
+
+head(book_ratings, 10)
+head(book_info, 10)
+head(user_info, 10)
+
+```
+
+This tells us that we can join `book_ratings` to `book_info` using `ISBN` and to `user_info` using `User.ID`.
+
+
+### How many ratings are there?
+
+```{r, echo=TRUE}
+
+dim(book_ratings)
+
+```
+
+
+### How many books have received each of the ratings, 0 through 10?
+
+```{r, echo=TRUE}
+
+table(book_ratings$Book.Rating)
+
+```
+
+
+### How many non-zero ratings are there?
+
+```{r, echo=TRUE}
+
+book_ratings %>% 
+  filter(Book.Rating != 0) %>% 
+  count()
+
+```
+
+
+### How many books has each reader rated?
+
+```{r, echo=TRUE}
+
+book_ratings %>% 
+  filter(Book.Rating != 0) %>%     # remove the zero ratings
+  group_by(User.ID) %>% 
+  count() %>%                      # number of books rated per reader
+  group_by(n) %>%                  
+  count() %>%                      # number of readers that rated x books
+  rename("number of books rated" = n, "number of readers" = nn)
+
+```
+It may be difficult to make predictions for the 3631 readers that have only rated 1 book.
+
+
+### Are there any NA values?
+
+```{r, echo=TRUE}
+
+sum(is.na(book_ratings$Book.Rating))    #0
+sum(is.na(user_info$Age))               #3311
+
+```
+
+
+### How many unique users are there that have rated at least 1 book?
+
+```{r, echo=TRUE}
+
+book_ratings %>% 
+  filter(Book.Rating != 0) %>% 
+  select(User.ID) %>% 
+  unique() %>% 
+  count()
+
+```
+
+### How many unique books are there that have been rated at least once?
+
+```{r, echo=TRUE}
+
+book_ratings %>% 
+  filter(Book.Rating != 0) %>% 
+  select(ISBN) %>% 
+  unique() %>% 
+  count()
+
+```
+
+
+### Let's remove the zero ratings and see what the distribution looks like
+
+```{r, echo=TRUE}
+
+ratings_long <- book_ratings %>% 
+  filter(Book.Rating != 0)         # remove the zero ratings
+
+ggplot(data = ratings_long, aes(Book.Rating)) + 
+  geom_histogram(binwidth = 0.5) +
+  labs(title = "Distribution of Book Ratings excluding zeros", x = "Book Rating")
+
+```
+
+
+### Let's see which users have rated the most books
+
+```{r, echo=TRUE}
+
+book_ratings %>% 
+  filter(Book.Rating != 0) %>%
+  group_by(User.ID) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  head(50)
+
+```
+
+
+### Let's see which books have the most ratings
+
+```{r, echo=TRUE}
+
+book_ratings %>% 
+  filter(Book.Rating != 0) %>%
+  select(User.ID, ISBN, Book.Rating) %>% 
+  group_by(ISBN) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  head(50)%>% 
+  left_join(book_info)
+
+```
+
+
+### Let's check that the data joins up nicely
+The following chunk produces the error "Error: Duplicate identifiers for rows (1008, 1009), (16884, 16885)" so has been commented out, let's see why in the next chunk
+
+```{r, echo=TRUE}
+
+# book_ratings %>% 
+#  left_join(book_info) %>%
+#  select(User.ID, Book.Title, Book.Rating) %>% 
+#  filter(Book.Rating %in% c(1:10)) %>%                    # remove not rated (value=0)
+#  spread(key = Book.Title, value = Book.Rating, fill = 0) # pivot the data, ISBN are columns
+
+```
+
+Oh dear! We have some duplicates, let's take a look:
+
+```{r, echo=TRUE}
+
+book_ratings_with_names <- book_ratings %>% 
+  left_join(book_info) %>%
+  select(User.ID, ISBN, Book.Title, Book.Rating) %>% 
+  filter(Book.Rating %in% c(1:10))
+book_ratings_with_names[c("1008","1009","16884","16885"),]
+
+```
+
+We have found that:
+- 2 readers have rated a book with different ISBNs but the same title, twice. 
+- Reader 11676 has given 2 differet ratings for what we will assume is the same book. 
+- Reader 251140 has given the same rating for what we will assume is the same book twice.
+
+Adding the book names to the dataset makes it far more readable so we will need to remove these duplicates if we want to add the book names.
+
+Let's get the average rating for book 'the nanny diaries: a novel'
+
+```{r, echo=TRUE}
+
+book_ratings %>% 
+  left_join(book_info) %>%
+  select(Book.Title, Book.Rating) %>% 
+  filter(Book.Title == 'the nanny diaries: a novel') %>% 
+  filter(Book.Rating %in% c(1:10)) %>% 
+  summarise(avg_bookrating = mean(Book.Rating))
+
+```
+
+Let's get the average rating for reader `11676`
+
+```{r, echo=TRUE}
+
+book_ratings %>% 
+  filter(User.ID == '11676') %>% 
+  summarise(avg_readerrating = mean(Book.Rating))
+
+```
+
+The average rating for this book is 7.35 which is closer to 6 than to 9.
+The average rating for this user is 5.05 which is closer to 6 than to 9.
+So we will discard the second rating of 9 for reader `11676` and keep 6.
+Reader `251140` gave the same rating (10) so it doesn't matter which record is removed.
+
+Let's remove the duplicates:
+
+```{r, echo=TRUE}
+
+duplicates <- book_ratings_with_names[c("1009","16885"),]
+duplicates
+book_ratings_with_names_deduped <- book_ratings_with_names %>% 
+  anti_join(duplicates)
+head(book_ratings_with_names_deduped)
+
+```
+
+Let's try again
+
+```{r}
+
+book_ratings_wide <- book_ratings_with_names_deduped %>% 
+spread(key = Book.Title, value = Book.Rating, fill = 0) # pivot the data, Book.Title are columns
+dim(book_ratings_wide)  
+
+# yay!!
+
+```
+
+
+### Let's see the distribution of Ages
+
+```{r}
+
+ggplot(data = user_info, aes(Age)) + 
+  geom_histogram(binwidth = 0.5) +
+  labs(title = "Distribution of Reader Ages", x = "Age of Reader")
+
+```
+
+Not all of these ages are reasonable eg, the long tail over 100, so they would need to be cleaned up if we decide to use them.
+

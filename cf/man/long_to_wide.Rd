@@ -9,24 +9,18 @@ long_to_wide(ratings_long, fill)
 \arguments{
 \item{ratings_long}{The input dataset contains 3 columns for User ID, Item}
 
-\item{fill}{Missing values are populated either with zeros (fill = 0) or NAs
-(fill = NA)}
+\item{fill}{Missing values are populated either with zeros (fill = 0) or NAs (fill = NA)}
 }
 \value{
 The output dataset is a wide matrix that contains each unique user as rownames and each unique item as column
-names with rating values populating the matrix values
+  names with rating values populating the matrix values
 }
 \description{
 Takes a long dataset and transforms it into a wide dataset
 }
 \details{
 The input dataset contains 3 columns for User ID's, Item ID's and
-Ratings respectively. The output dataset is a wide matrix that contains each unique user as rownames and each unique item as column
-names with rating values populating the matrix values. The User ID column has been removed from the matrix to prepare for the format required by the
-collaborative filtering functions namely: user based, item based and matrix
-factorisation.
-}
-\examples{
-ratings_wide_all <- long_to_wide(book_ratings, 0)
-
+  Ratings respectively. The output dataset is a wide matrix that contains each unique user as rownames and each unique item as column
+  names with rating values populating the matrix values. The User ID column has been removed from the matrix to prepare for the format required by the
+  collaborative filtering functions namely, user based, item based and matrix factorisation.
 }

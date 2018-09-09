@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Audrey Pentz" />
+
+<meta name="date" content="2018-09-03" />
+
+<title>Exploratory Data Analysis (EDA)</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Exploratory Data Analysis (EDA)</h1>
+<h4 class="author"><em>Audrey Pentz</em></h4>
+<h4 class="date"><em>2018-09-03</em></h4>
+
+
+
+<div id="objectives" class="section level3">
+<h3>Objectives</h3>
+<p>The objective of this vignette is to do an exploratory data analysis (EDA) on the Book Ratings data included in this package in order to showcase the kind of issues one may face when trying to shape the data into the format required by any of the 3 collaborative filtering methods. Each of the 3 collaborative filtering methods have their own vignette as well.</p>
+</div>
+<div id="lets-have-a-look-at-some-data." class="section level3">
+<h3>Let’s have a look at some data.</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+dplyr<span class="op">::</span><span class="kw">glimpse</span>(book_ratings)
+<span class="co">#&gt; Observations: 45,483</span>
+<span class="co">#&gt; Variables: 3</span>
+<span class="co">#&gt; $ User.ID     &lt;int&gt; 276925, 276925, 276925, 276925, 276939, 276939, 27...</span>
+<span class="co">#&gt; $ ISBN        &lt;chr&gt; &quot;0316666343&quot;, &quot;0385504209&quot;, &quot;0804106304&quot;, &quot;0971880...</span>
+<span class="co">#&gt; $ Book.Rating &lt;int&gt; 0, 8, 0, 0, 0, 0, 0, 0, 7, 8, 0, 2, 0, 0, 0, 0, 0,...</span>
+dplyr<span class="op">::</span><span class="kw">glimpse</span>(book_info)
+<span class="co">#&gt; Observations: 150</span>
+<span class="co">#&gt; Variables: 3</span>
+<span class="co">#&gt; $ ISBN        &lt;chr&gt; &quot;0440234743&quot;, &quot;0971880107&quot;, &quot;0345417623&quot;, &quot;0446310...</span>
+<span class="co">#&gt; $ Book.Title  &lt;chr&gt; &quot;the testament&quot;, &quot;wild animus&quot;, &quot;timeline&quot;, &quot;to ki...</span>
+<span class="co">#&gt; $ Book.Author &lt;chr&gt; &quot;john grisham&quot;, &quot;rich shapero&quot;, &quot;michael crichton&quot;...</span>
+dplyr<span class="op">::</span><span class="kw">glimpse</span>(user_info)
+<span class="co">#&gt; Observations: 10,000</span>
+<span class="co">#&gt; Variables: 2</span>
+<span class="co">#&gt; $ User.ID &lt;int&gt; 9, 14, 16, 26, 51, 67, 91, 95, 99, 114, 125, 165, 193,...</span>
+<span class="co">#&gt; $ Age     &lt;dbl&gt; NA, NA, NA, NA, 34, 43, NA, NA, 42, 57, 49, 62, 23, 37...</span>
+
+<span class="kw">head</span>(book_ratings, <span class="dv">10</span>)
+<span class="co">#&gt;    User.ID       ISBN Book.Rating</span>
+<span class="co">#&gt; 1   276925 0316666343           0</span>
+<span class="co">#&gt; 2   276925 0385504209           8</span>
+<span class="co">#&gt; 3   276925 0804106304           0</span>
+<span class="co">#&gt; 4   276925 0971880107           0</span>
+<span class="co">#&gt; 5   276939 059035342X           0</span>
+<span class="co">#&gt; 6   276939 0971880107           0</span>
+<span class="co">#&gt; 7   277042 0312983271           0</span>
+<span class="co">#&gt; 8   277042 0380731851           0</span>
+<span class="co">#&gt; 9   277042 0446605484           7</span>
+<span class="co">#&gt; 10  277042 0446611212           8</span>
+<span class="kw">head</span>(book_info, <span class="dv">10</span>)
+<span class="co">#&gt;          ISBN                                                Book.Title</span>
+<span class="co">#&gt; 1  0440234743                                             the testament</span>
+<span class="co">#&gt; 2  0971880107                                               wild animus</span>
+<span class="co">#&gt; 3  0345417623                                                  timeline</span>
+<span class="co">#&gt; 4  0446310786                                     to kill a mockingbird</span>
+<span class="co">#&gt; 5  0449005615                            seabiscuit: an american legend</span>
+<span class="co">#&gt; 6  0440225701                                         the street lawyer</span>
+<span class="co">#&gt; 7  0804106304                                         the joy luck club</span>
+<span class="co">#&gt; 8  0316769487                                    the catcher in the rye</span>
+<span class="co">#&gt; 9  0679429220 midnight in the garden of good and evil: a savannah story</span>
+<span class="co">#&gt; 10 0451166892                                  the pillars of the earth</span>
+<span class="co">#&gt;          Book.Author</span>
+<span class="co">#&gt; 1       john grisham</span>
+<span class="co">#&gt; 2       rich shapero</span>
+<span class="co">#&gt; 3   michael crichton</span>
+<span class="co">#&gt; 4         harper lee</span>
+<span class="co">#&gt; 5  laura hillenbrand</span>
+<span class="co">#&gt; 6       john grisham</span>
+<span class="co">#&gt; 7            amy tan</span>
+<span class="co">#&gt; 8      j.d. salinger</span>
+<span class="co">#&gt; 9       john berendt</span>
+<span class="co">#&gt; 10       ken follett</span>
+<span class="kw">head</span>(user_info, <span class="dv">10</span>)
+<span class="co">#&gt;    User.ID Age</span>
+<span class="co">#&gt; 1        9  NA</span>
+<span class="co">#&gt; 2       14  NA</span>
+<span class="co">#&gt; 3       16  NA</span>
+<span class="co">#&gt; 4       26  NA</span>
+<span class="co">#&gt; 5       51  34</span>
+<span class="co">#&gt; 6       67  43</span>
+<span class="co">#&gt; 7       91  NA</span>
+<span class="co">#&gt; 8       95  NA</span>
+<span class="co">#&gt; 9       99  42</span>
+<span class="co">#&gt; 10     114  57</span></code></pre></div>
+<p>This tells us that we can join <code>book_ratings</code> to <code>book_info</code> using <code>ISBN</code> and to <code>user_info</code> using <code>User.ID</code>.</p>
+</div>
+<div id="how-many-ratings-are-there" class="section level3">
+<h3>How many ratings are there?</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">dim</span>(book_ratings)
+<span class="co">#&gt; [1] 45483     3</span></code></pre></div>
+</div>
+<div id="how-many-books-have-received-each-of-the-ratings-0-through-10" class="section level3">
+<h3>How many books have received each of the ratings, 0 through 10?</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">table</span>(book_ratings<span class="op">$</span>Book.Rating)
+<span class="co">#&gt; </span>
+<span class="co">#&gt;     0     1     2     3     4     5     6     7     8     9    10 </span>
+<span class="co">#&gt; 27166    94   124   241   328  1427  1303  2941  4631  3576  3652</span></code></pre></div>
+</div>
+<div id="how-many-non-zero-ratings-are-there" class="section level3">
+<h3>How many non-zero ratings are there?</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">count</span>()
+<span class="co">#&gt; # A tibble: 1 x 1</span>
+<span class="co">#&gt;       n</span>
+<span class="co">#&gt;   &lt;int&gt;</span>
+<span class="co">#&gt; 1 18317</span></code></pre></div>
+</div>
+<div id="how-many-books-has-each-reader-rated" class="section level3">
+<h3>How many books has each reader rated?</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st">     </span><span class="co"># remove the zero ratings</span>
+<span class="st">  </span><span class="kw">group_by</span>(User.ID) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">count</span>() <span class="op">%&gt;%</span><span class="st">                      </span><span class="co"># number of books rated per reader</span>
+<span class="st">  </span><span class="kw">group_by</span>(n) <span class="op">%&gt;%</span><span class="st">                  </span>
+<span class="st">  </span><span class="kw">count</span>() <span class="op">%&gt;%</span><span class="st">                      </span><span class="co"># number of readers that rated x books</span>
+<span class="st">  </span><span class="kw">rename</span>(<span class="st">&quot;number of books rated&quot;</span> =<span class="st"> </span>n, <span class="st">&quot;number of readers&quot;</span> =<span class="st"> </span>nn)
+<span class="co">#&gt; # A tibble: 32 x 2</span>
+<span class="co">#&gt; # Groups:   number of books rated [32]</span>
+<span class="co">#&gt;    `number of books rated` `number of readers`</span>
+<span class="co">#&gt;                      &lt;int&gt;               &lt;int&gt;</span>
+<span class="co">#&gt;  1                       1                3631</span>
+<span class="co">#&gt;  2                       2                1814</span>
+<span class="co">#&gt;  3                       3                 753</span>
+<span class="co">#&gt;  4                       4                 446</span>
+<span class="co">#&gt;  5                       5                 249</span>
+<span class="co">#&gt;  6                       6                 156</span>
+<span class="co">#&gt;  7                       7                 126</span>
+<span class="co">#&gt;  8                       8                  74</span>
+<span class="co">#&gt;  9                       9                  50</span>
+<span class="co">#&gt; 10                      10                  48</span>
+<span class="co">#&gt; # ... with 22 more rows</span></code></pre></div>
+<p>It may be difficult to make predictions for the 3631 readers that have only rated 1 book.</p>
+</div>
+<div id="are-there-any-na-values" class="section level3">
+<h3>Are there any NA values?</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">sum</span>(<span class="kw">is.na</span>(book_ratings<span class="op">$</span>Book.Rating))    <span class="co">#0</span>
+<span class="co">#&gt; [1] 0</span>
+<span class="kw">sum</span>(<span class="kw">is.na</span>(user_info<span class="op">$</span>Age))               <span class="co">#3311</span>
+<span class="co">#&gt; [1] 3311</span></code></pre></div>
+</div>
+<div id="how-many-unique-users-are-there-that-have-rated-at-least-1-book" class="section level3">
+<h3>How many unique users are there that have rated at least 1 book?</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(User.ID) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">unique</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">count</span>()
+<span class="co">#&gt; # A tibble: 1 x 1</span>
+<span class="co">#&gt;       n</span>
+<span class="co">#&gt;   &lt;int&gt;</span>
+<span class="co">#&gt; 1  7503</span></code></pre></div>
+</div>
+<div id="how-many-unique-books-are-there-that-have-been-rated-at-least-once" class="section level3">
+<h3>How many unique books are there that have been rated at least once?</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(ISBN) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">unique</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">count</span>()
+<span class="co">#&gt; # A tibble: 1 x 1</span>
+<span class="co">#&gt;       n</span>
+<span class="co">#&gt;   &lt;int&gt;</span>
+<span class="co">#&gt; 1   150</span></code></pre></div>
+</div>
+<div id="lets-remove-the-zero-ratings-and-see-what-the-distribution-looks-like" class="section level3">
+<h3>Let’s remove the zero ratings and see what the distribution looks like</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+ratings_long &lt;-<span class="st"> </span>book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>)         <span class="co"># remove the zero ratings</span>
+
+<span class="kw">ggplot</span>(<span class="dt">data =</span> ratings_long, <span class="kw">aes</span>(Book.Rating)) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="fl">0.5</span>) <span class="op">+</span>
+<span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Distribution of Book Ratings excluding zeros&quot;</span>, <span class="dt">x =</span> <span class="st">&quot;Book Rating&quot;</span>)</code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="lets-see-which-users-have-rated-the-most-books" class="section level3">
+<h3>Let’s see which users have rated the most books</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(User.ID) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">count</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(n)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">50</span>)
+<span class="co">#&gt; # A tibble: 50 x 2</span>
+<span class="co">#&gt; # Groups:   User.ID [50]</span>
+<span class="co">#&gt;    User.ID     n</span>
+<span class="co">#&gt;      &lt;int&gt; &lt;int&gt;</span>
+<span class="co">#&gt;  1   11676    96</span>
+<span class="co">#&gt;  2   16795    56</span>
+<span class="co">#&gt;  3   95359    45</span>
+<span class="co">#&gt;  4  240567    37</span>
+<span class="co">#&gt;  5   60244    30</span>
+<span class="co">#&gt;  6  105979    30</span>
+<span class="co">#&gt;  7    6575    28</span>
+<span class="co">#&gt;  8  135149    28</span>
+<span class="co">#&gt;  9  204864    26</span>
+<span class="co">#&gt; 10  104636    25</span>
+<span class="co">#&gt; # ... with 40 more rows</span></code></pre></div>
+</div>
+<div id="lets-see-which-books-have-the-most-ratings" class="section level3">
+<h3>Let’s see which books have the most ratings</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(User.ID, ISBN, Book.Rating) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(ISBN) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">count</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(n)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">50</span>)<span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info)
+<span class="co">#&gt; Joining, by = &quot;ISBN&quot;</span>
+<span class="co">#&gt; # A tibble: 50 x 4</span>
+<span class="co">#&gt; # Groups:   ISBN [?]</span>
+<span class="co">#&gt;    ISBN         n Book.Title                                 Book.Author  </span>
+<span class="co">#&gt;    &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;                                      &lt;chr&gt;        </span>
+<span class="co">#&gt;  1 0316666~   523 the lovely bones: a novel                  alice sebold </span>
+<span class="co">#&gt;  2 0385504~   387 the da vinci code                          dan brown    </span>
+<span class="co">#&gt;  3 0971880~   309 wild animus                                rich shapero </span>
+<span class="co">#&gt;  4 0312195~   278 the red tent (bestselling backlist)        anita diamant</span>
+<span class="co">#&gt;  5 0060928~   247 divine secrets of the ya-ya sisterhood: a~ rebecca wells</span>
+<span class="co">#&gt;  6 0142001~   244 the secret life of bees                    sue monk kidd</span>
+<span class="co">#&gt;  7 0590353~   242 harry potter and the sorcerer's stone (ha~ j. k. rowling</span>
+<span class="co">#&gt;  8 0446672~   225 where the heart is (oprah's book club (pa~ billie letts </span>
+<span class="co">#&gt;  9 0452282~   219 girl with a pearl earring                  tracy cheval~</span>
+<span class="co">#&gt; 10 0671027~   216 angels &amp;amp; demons                        dan brown    </span>
+<span class="co">#&gt; # ... with 40 more rows</span></code></pre></div>
+</div>
+<div id="lets-check-that-the-data-joins-up-nicely" class="section level3">
+<h3>Let’s check that the data joins up nicely</h3>
+<p>The following chunk produces the error “Error: Duplicate identifiers for rows (1008, 1009), (16884, 16885)” so has been commented out, let’s see why in the next chunk</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># book_ratings %&gt;% </span>
+<span class="co">#  left_join(book_info) %&gt;%</span>
+<span class="co">#  select(User.ID, Book.Title, Book.Rating) %&gt;% </span>
+<span class="co">#  filter(Book.Rating %in% c(1:10)) %&gt;%                    # remove not rated (value=0)</span>
+<span class="co">#  spread(key = Book.Title, value = Book.Rating, fill = 0) # pivot the data, ISBN are columns</span></code></pre></div>
+<p>Oh dear! We have some duplicates, let’s take a look:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings_with_names &lt;-<span class="st"> </span>book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(User.ID, ISBN, Book.Title, Book.Rating) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>))
+<span class="co">#&gt; Joining, by = &quot;ISBN&quot;</span>
+book_ratings_with_names[<span class="kw">c</span>(<span class="st">&quot;1008&quot;</span>,<span class="st">&quot;1009&quot;</span>,<span class="st">&quot;16884&quot;</span>,<span class="st">&quot;16885&quot;</span>),]
+<span class="co">#&gt;       User.ID       ISBN                 Book.Title Book.Rating</span>
+<span class="co">#&gt; 1008    11676 0312278586 the nanny diaries: a novel           6</span>
+<span class="co">#&gt; 1009    11676 0312291639 the nanny diaries: a novel           9</span>
+<span class="co">#&gt; 16884  251140 0312278586 the nanny diaries: a novel          10</span>
+<span class="co">#&gt; 16885  251140 0312291639 the nanny diaries: a novel          10</span></code></pre></div>
+<p>We have found that: - 2 readers have rated a book with different ISBNs but the same title, twice. - Reader 11676 has given 2 differet ratings for what we will assume is the same book. - Reader 251140 has given the same rating for what we will assume is the same book twice.</p>
+<p>Adding the book names to the dataset makes it far more readable so we will need to remove these duplicates if we want to add the book names.</p>
+<p>Let’s get the average rating for book ‘the nanny diaries: a novel’</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(Book.Title, Book.Rating) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Title <span class="op">==</span><span class="st"> 'the nanny diaries: a novel'</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg_bookrating =</span> <span class="kw">mean</span>(Book.Rating))
+<span class="co">#&gt; Joining, by = &quot;ISBN&quot;</span>
+<span class="co">#&gt;   avg_bookrating</span>
+<span class="co">#&gt; 1       7.353741</span></code></pre></div>
+<p>Let’s get the average rating for reader <code>11676</code></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(User.ID <span class="op">==</span><span class="st"> '11676'</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg_readerrating =</span> <span class="kw">mean</span>(Book.Rating))
+<span class="co">#&gt;   avg_readerrating</span>
+<span class="co">#&gt; 1          5.04698</span></code></pre></div>
+<p>The average rating for this book is 7.35 which is closer to 6 than to 9. The average rating for this user is 5.05 which is closer to 6 than to 9. So we will discard the second rating of 9 for reader <code>11676</code> and keep 6. Reader <code>251140</code> gave the same rating (10) so it doesn’t matter which record is removed.</p>
+<p>Let’s remove the duplicates:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+duplicates &lt;-<span class="st"> </span>book_ratings_with_names[<span class="kw">c</span>(<span class="st">&quot;1009&quot;</span>,<span class="st">&quot;16885&quot;</span>),]
+duplicates
+<span class="co">#&gt;       User.ID       ISBN                 Book.Title Book.Rating</span>
+<span class="co">#&gt; 1009    11676 0312291639 the nanny diaries: a novel           9</span>
+<span class="co">#&gt; 16885  251140 0312291639 the nanny diaries: a novel          10</span>
+book_ratings_with_names_deduped &lt;-<span class="st"> </span>book_ratings_with_names <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">anti_join</span>(duplicates)
+<span class="co">#&gt; Joining, by = c(&quot;User.ID&quot;, &quot;ISBN&quot;, &quot;Book.Title&quot;, &quot;Book.Rating&quot;)</span>
+<span class="kw">head</span>(book_ratings_with_names_deduped)
+<span class="co">#&gt;   User.ID       ISBN                            Book.Title Book.Rating</span>
+<span class="co">#&gt; 1  276925 0385504209                     the da vinci code           8</span>
+<span class="co">#&gt; 2  277042 0446605484     roses are red (alex cross novels)           7</span>
+<span class="co">#&gt; 3  277042 0446611212                      violets are blue           8</span>
+<span class="co">#&gt; 4  277042 0971880107                           wild animus           2</span>
+<span class="co">#&gt; 5  277195 0671021001 she's come undone (oprah's book club)          10</span>
+<span class="co">#&gt; 6  277378 0312195516   the red tent (bestselling backlist)           7</span></code></pre></div>
+<p>Let’s try again</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+book_ratings_wide &lt;-<span class="st"> </span>book_ratings_with_names_deduped <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="kw">spread</span>(<span class="dt">key =</span> Book.Title, <span class="dt">value =</span> Book.Rating, <span class="dt">fill =</span> <span class="dv">0</span>) <span class="co"># pivot the data, Book.Title are columns</span>
+<span class="kw">dim</span>(book_ratings_wide)  
+<span class="co">#&gt; [1] 18315   151</span>
+
+<span class="co"># yay!!</span></code></pre></div>
+</div>
+<div id="lets-see-the-distribution-of-ages" class="section level3">
+<h3>Let’s see the distribution of Ages</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">ggplot</span>(<span class="dt">data =</span> user_info, <span class="kw">aes</span>(Age)) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="fl">0.5</span>) <span class="op">+</span>
+<span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Distribution of Reader Ages&quot;</span>, <span class="dt">x =</span> <span class="st">&quot;Age of Reader&quot;</span>)
+<span class="co">#&gt; Warning: Removed 3311 rows containing non-finite values (stat_bin).</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Not all of these ages are reasonable eg, the long tail over 100, so they would need to be cleaned up if we decide to use them.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

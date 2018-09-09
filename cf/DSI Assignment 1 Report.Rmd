@@ -1,0 +1,199 @@
+---
+title: "DSI Assignment 1"
+author: "Audrey Pentz PNTAUD001"
+date: "September 3, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  library(cf),
+  library(dplyr),
+  library(tidyr),
+# load data
+load("./data/book_ratings.RData"),
+# save as .RData
+save(book_ratings, book_info, user_info, file = "data/book_ratings.RData")
+)
+
+```
+
+### Description of the problem
+
+The general aim of any collaborative filtering system is to make recommendations to existing or new users, based on their own history of usage of items and compared with the history of usage of items of other users that are similar to them.
+
+The terms `users`, `items` and `similarity` differ between methods and can be applied to various fields, for example: Netflix recommends movies (`items`) to subscribers (`users`) based on their self selected favourites (new users) and viewing history (existing users) and Amazon recommends books (`items`) to account holders (`users`) based on their purchase history and other account holders that have purchased the same item as well as items that account holder has not (yet) purchased.
+
+The specific task of this assignment is to use the modified version of the `Book-Crossings` dataset provided, to make recommendations to new or existing readers (`users`), of books (`items`) they may enjoy, based on previous books they have rated. The dataset comprises book ratings of 10,000 users that have rated 150 books on a scale from 0 to 10.
+
+There are 3 main collaborative filtering techniques that have been explored, namely:  
+--  User Based Collaborative Filtering  
+--  Item Based Collaborative Filtering  
+--  Collaborative Filterin using the Matrix Factorisation technique  
+
+
+### Approach
+
+There are many collaborative filtering packages available on CRAN and GitHub so the objective of building this recommendation system as a package is not to try to better those but to try to automate some of the repetitive tasks and the audience in mind is my future self, needing a refresh of the methods. With that in mind, 2 of the main packages that were used to build on were the `coop` package to calculate cosine similarities fast and the `NNLM` package for matrix factorisation.
+
+A lot of work goes into building a package so it was designed so that it can be used on any similar dataset, rather than customising it to only be appropriate for the `Book-Crossings` dataset.
+
+Many of the tasks required by the 3 methods overlap and where there was overlap, functions were built and documented to make it easier to execute the same task multiple times (rather than copying code) eg. all 3 methods require a transformation of the data so the following 3 functions were built for this purpose:
+-- `remove_zeros_blanks` - all 3 required a removal of implicit ratings (rating = zero) and even though this dataset does not have any NA (blank) values, this function also caters for that
+-- `long_to_wide` - all 3 required a conversion from long format to wide format however User and Item based methods required no ratings to be filled with zeros whilst matrix factorisation required no ratings to be filled with NA's so this was catered for in this function
+-- `convert_to_matrix` - all 3 methods have this requirement
+
+In contrast, splitting the data into a training and test set is a task only required by matrix factorisation and is only executed once per dataset so this was not built into a function.
+
+User and Item based methods required the calculation of similarities and a recommendation method and Matrix Factorisation required model building, model evaluation, a prediction method and a recommendation method. These were all built as functions and naming convensions were chosen in such a way that the user only needs to remember which method they are trying to execute to call up the function, namely:
+-- `user_similarities`  
+-- `user_predict`  
+-- `item_similarities`  
+-- `item_predict`  
+-- `mf_model_build`  
+-- `mf_model_rmse`  
+-- `mf_model_predict`  
+-- `mf_model_recommend`  
+
+Please see the documentation of each function for more information about how the functions work as well as the vignettes for an end to end example of each method.
+
+The package is called the `cf` package (for collaborative filtering) which should be easy enough to remember (even for my future self). The modified version of the `Book-Crossings` dataset has been imported into the package so that anyone can learn from this package by applying the same techniques to the same data and perhaps extend the work done.
+
+There are many places that building a package could go wrong so the initial approach to build everything outside of the package and then convert it into the format required to build the package, did not work well. We therefore recommend an iterative approach when building a package which starts by creating a function then going through the package build cycle (document, build, restart R) and then using the function in a vignette as it's only through trying to use the package that one realises what's missing, what's not working and where there is room for improvement. The other reason for this approach is that vignettes seem to be even more prone to errors so the sooner one tackles those, the easier it is to resolve.
+
+
+### Results
+
+The detailed results are contained within 4 vignettes which were built as part of the `cf` package and all code is exposed in order for a user of the package to be able to execute similar tasks on their dataset. These are described below:
+
+- `EDA` - this is an Exploratory Data Analysis of the modified version of the `Book-Crossings` dataset to showcase the kind of problems a user of the package may need to resolve with their dataset and as a reminder of what this dataset contains.
+- `cf_user_based` - this is an illustration of how to do User based collaborative filtering.
+- `cf_item_based` - this is an illustration of how to do Item based collaborative filtering.
+- `cf_matrix_factorisation` - this is an illustration of how to do collaborative filtering using the Matrix Factorisation technique.
+
+To summarise the results, we chose 5 Users that have rated 5 or more books to illustrate the results. The Users are: "23872","63360","98783","16795", "11676".
+
+#### Recommendations using the User-Based method:
+
+```{r}
+
+# remove zeros
+data <- cf::remove_zeros_blanks(book_ratings)
+
+# identify the duplicates
+book_ratings_with_names <- data %>% 
+  left_join(book_info) %>%
+  select(User.ID, ISBN, Book.Title, Book.Rating) %>% 
+  filter(Book.Rating %in% c(1:10))
+
+# remove the duplicates
+duplicates <- book_ratings_with_names[c("1009","16885"),]
+duplicates
+book_ratings_with_names_deduped <- book_ratings_with_names %>% 
+  anti_join(duplicates) %>% 
+  select(User.ID, Book.Title, Book.Rating)
+
+data <- cf::long_to_wide(book_ratings_with_names_deduped, fill = 0)
+
+data <- cf::convert_to_matrix(data)
+
+user_sims <- cf::user_similarities(data)
+
+lapply(c("23872","63360","98783","16795", "11676"), user_predict, user_sims, data, 10)
+
+```
+
+
+#### Recommendations using the Item-Based method:
+
+```{r}
+
+item_similarities <- function(ratings_wide){
+  item_similarities <- coop::cosine(ratings_wide)  # the cosine function calculates cosine similarity between columns (items)
+  diag(item_similarities) <- 0                     # set diagonal to zero to avoid returning similarity to self
+  return(item_similarities)
+}
+
+item_sims <- cf::item_similarities(data)
+
+# which books has a given reader read?
+# put back the implicit ratings
+book_ratings_read <- book_ratings %>% 
+  left_join(book_info) %>%
+  select(User.ID, Book.Title, Book.Rating)
+book_ratings_read$Book.Rating <- 1                # make all ratings 1 to indicate read
+book_ratings_read <- unique(book_ratings_read)    # remove dupilcates
+# wide format
+data_read <- cf::long_to_wide(book_ratings_read, fill = 0)
+# matrix format
+data_read <- cf::convert_to_matrix(data_read)
+
+lapply(c("23872","63360","98783","16795", "11676"), item_predict, item_sims, data_read, 10)
+
+```
+
+
+#### Recommendations using the Matrix Factorisation method:
+
+```{r}
+
+# 1. remove zeros
+book_ratings_with_names <- book_ratings %>% 
+  left_join(book_info) %>% 
+  filter(Book.Rating != 0) %>%
+  select(User.ID, Book.Title, Book.Rating)
+head(book_ratings_with_names)
+
+# 2. remove duplicates
+duplicates <- book_ratings_with_names[c("1009","16885"),]
+duplicates
+book_ratings_with_names_deduped <- book_ratings_with_names %>% 
+  anti_join(duplicates)
+head(book_ratings_with_names_deduped)
+
+# convert from long to wide matrix and fill with NAs
+ratings_wide <- cf::long_to_wide(book_ratings_with_names_deduped, NA)      
+ratings_wide <- cf::convert_to_matrix(ratings_wide)
+
+# save the final model so that we can use it to make predictions
+model_final <- cf::mf_model_build(ratings_wide, k_latent = 1, 
+                         alpha = 0, beta = 0, 
+                         bias = "FALSE")
+
+# make predictions
+predictions <- cf::mf_predict(model_final)
+
+# for all the other demo users:
+lapply(c("63360","98783","16795", "11676"), mf_recommend, 
+       predictions, ratings_wide, predict_n = 10)
+
+
+```
+
+
+### Analysis and Interpretation of Results
+
+Each of the 3 methods gives a different top 10 recommendation for the chosen users however there is some overlap in recommendations from the 3 methods.
+
+We saw that user 23872 and user 63360 are similar with a similarity score of 0.7 and 4 of the same books are in their top 10 recommendations for User Based as expected, namely:
+-- queen of the damned (position 1 for both)  
+-- the hobbit (position 4 and 2 respectively)  
+-- harry potter and the sorcerer's stone (position 2 and 4 respectively)  
+-- the firm (position 7 and 9 respectively)  
+
+The item based method also had 3 of these in the top 10:
+-- queen of the damned (position 1 for both)  
+-- the hobbit (position 8 and 3 respectively)  
+-- the firm (position 6 and 9 respectively)  
+Interestingly, item based recommended books by the same author eg. John Grisham wrote the firm and also the client and the pelican brief from the top 10 recommendations. This makes intuitive sense given that books are considered similar if they have been rated similarly by the same readers, assuming that readers like to read more than 1 book by the same author.
+
+The matrix factorisation method also recommended 2 of the same books for these 2 users.
+-- the hobbit (position 4 and 2 respectively)  
+-- harry potter and the sorcerer's stone (position 2 and 4 respectively)  
+
+Therefore, perhaps these 2 books would be appropriate as a combined recommendation from the 3 different methods.
+
+User 11676 has read 148 of the books even though they have only rated 95 so there is only 1 recommendation from items based which is the 1 book not yet read (girl interupted).
+
+

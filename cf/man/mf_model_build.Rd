@@ -7,17 +7,29 @@
 mf_model_build(train_wide, k_latent, alpha, beta, bias)
 }
 \arguments{
-\item{train_wide}{The input dataset is a long matrix which contains User ID's, Item ID's and Ratings in the first 3 columns respectively.}
+\item{train_wide}{The training dataset including rows with NAs for testing.}
 
-\item{k_latent}{Set method = "user" to return cosine similarities between rows (users) eg. readers who gave similar books similar ratings would have cosine similarities closer to 1 and readers who give different ratings to similar books or who rated a different set of books have a cosine similarity closer to zero. Set method = "item" to return cosine similarities between columns (items) eg. users that gave movies similar ratings are considered similar and cosine similarity is closer to 1 and users that gave movies different ratings are considered different from each other and cosine similarity is closer to 0}
+\item{k_latent}{The number of latent factors to add. This corresponds to the
+number of columns in the W matrix and the number of rows in the H matrix}
+
+\item{alpha}{L2 regularisation for Users (rows) of A}
+
+\item{beta}{L2 regularisation for Items (columns) of A}
+
+\item{bias}{Set bias = "TRUE" to add or "FALSE" to omit}
 }
 \value{
-The output is the predictive model which can then be used to make predictions and calculate the accuracy as measured by the RMSE..
+The output is the predictive model which can then be used to make
+  predictions and calculate the accuracy as measured by the RMSE..
 }
 \description{
 Build the matrix factorisation model
 }
 \details{
-The input dataset is a long matrix which contains User ID's, Item ID's and Ratings in the first 3 columns respectively.
-The output is the model specified which can then be used to predict ratings..
+The input dataset is a wide matrix, let's call it `A`. The Matrix
+  Factorisation Technique takes in a matrix `A` and decomposes it into the
+  product of 2 matrices, `W` and `H` such that `W` %*% `H` = `A`. The output
+  is the model specified which can then be used to either assess model
+  accuracy (see the `mf_model_rmse` function) or to predict ratings (see the
+  `mf_model_predict` function).
 }

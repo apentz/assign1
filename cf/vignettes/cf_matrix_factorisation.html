@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Vignette Author" />
+
+<meta name="date" content="2018-09-04" />
+
+<title>Matrix Factorisation Method</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Matrix Factorisation Method</h1>
+<h4 class="author"><em>Vignette Author</em></h4>
+<h4 class="date"><em>2018-09-04</em></h4>
+
+
+
+<div id="objectives" class="section level3">
+<h3>Objectives</h3>
+<p>Collaborative Filtering using Matrix Factorisation is 1 of 3 techniques used to build a Recommender System in the cf package. A demonstration of how to use the cf package for this purpose follows.</p>
+<p>The demonstration uses a book ratings dataset of 10,000 users that have rated 150 books on a scale from 0 to 10 and is loaded with the package.</p>
+<p>The package can be used in this way on any similar dataset.</p>
+<p>The objectives of this vignette are as follows:<br />
+- To transform the data into the format required<br />
+- To split the data into a training and testing (validation) set<br />
+- To train a few models and evaulate their performance on the training and testing (validation) set<br />
+- experimenting with a few different number of latent factors (k)<br />
+- including adding L2 regularisation<br />
+- including adding Bias<br />
+- including adding L2 regularisation and Bias<br />
+- To select the best model based on the out of sample (test) RMSE<br />
+- To make predictions using the best model<br />
+- To make predictions for a new reader</p>
+</div>
+<div id="transform-the-data" class="section level3">
+<h3>1. Transform the data</h3>
+<p>This is a repeat of the EDA and User Based CF vignettes so will not be explained.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># load packages</span>
+<span class="kw">library</span>(cf)
+<span class="kw">library</span>(dplyr)
+<span class="kw">library</span>(tidyr)
+
+<span class="co"># 1. remove zeros</span>
+book_ratings_with_names &lt;-<span class="st"> </span>book_ratings <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(Book.Rating <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(User.ID, Book.Title, Book.Rating)
+<span class="co">#&gt; Joining, by = &quot;ISBN&quot;</span>
+<span class="kw">head</span>(book_ratings_with_names)
+<span class="co">#&gt;   User.ID                            Book.Title Book.Rating</span>
+<span class="co">#&gt; 1  276925                     the da vinci code           8</span>
+<span class="co">#&gt; 2  277042     roses are red (alex cross novels)           7</span>
+<span class="co">#&gt; 3  277042                      violets are blue           8</span>
+<span class="co">#&gt; 4  277042                           wild animus           2</span>
+<span class="co">#&gt; 5  277195 she's come undone (oprah's book club)          10</span>
+<span class="co">#&gt; 6  277378   the red tent (bestselling backlist)           7</span>
+
+<span class="co"># 2. remove duplicates</span>
+duplicates &lt;-<span class="st"> </span>book_ratings_with_names[<span class="kw">c</span>(<span class="st">&quot;1009&quot;</span>,<span class="st">&quot;16885&quot;</span>),]
+duplicates
+<span class="co">#&gt;       User.ID                 Book.Title Book.Rating</span>
+<span class="co">#&gt; 1009    11676 the nanny diaries: a novel           9</span>
+<span class="co">#&gt; 16885  251140 the nanny diaries: a novel          10</span>
+book_ratings_with_names_deduped &lt;-<span class="st"> </span>book_ratings_with_names <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">anti_join</span>(duplicates)
+<span class="co">#&gt; Joining, by = c(&quot;User.ID&quot;, &quot;Book.Title&quot;, &quot;Book.Rating&quot;)</span>
+<span class="kw">head</span>(book_ratings_with_names_deduped)
+<span class="co">#&gt;   User.ID                            Book.Title Book.Rating</span>
+<span class="co">#&gt; 1  276925                     the da vinci code           8</span>
+<span class="co">#&gt; 2  277042     roses are red (alex cross novels)           7</span>
+<span class="co">#&gt; 3  277042                      violets are blue           8</span>
+<span class="co">#&gt; 4  277042                           wild animus           2</span>
+<span class="co">#&gt; 5  277195 she's come undone (oprah's book club)          10</span>
+<span class="co">#&gt; 6  277378   the red tent (bestselling backlist)           7</span></code></pre></div>
+</div>
+<div id="split-the-data-into-a-training-and-testing-validation-set" class="section level3">
+<h3>2. Split the data into a training and testing (validation) set</h3>
+<p>We will select 80% for training and 20% for testing (validation of out of sample predictions).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">set.seed</span>(<span class="dv">123</span>)
+<span class="co"># create an index</span>
+index_long &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="kw">seq_len</span>(<span class="kw">nrow</span>(book_ratings_with_names_deduped)), 
+                <span class="dt">size =</span> <span class="kw">round</span>(<span class="kw">nrow</span>(book_ratings_with_names_deduped)<span class="op">*</span><span class="fl">0.8</span>,<span class="dv">0</span>))
+
+<span class="co"># split the data</span>
+train_long &lt;-<span class="st"> </span>book_ratings_with_names_deduped[index_long,]    <span class="co"># train the model on 80% of the data</span>
+test_long &lt;-<span class="st"> </span>book_ratings_with_names_deduped[<span class="op">-</span>index_long,]    <span class="co"># hold out 20%</span>
+blanks &lt;-<span class="st"> </span>test_long                   <span class="co"># create a copy of the test ratings</span>
+blanks[,<span class="dv">3</span>] &lt;-<span class="st"> </span><span class="ot">NA</span>                      <span class="co"># remove the test ratings and replace with NAs (blanks)</span>
+train &lt;-<span class="st"> </span><span class="kw">rbind</span>(train_long,blanks)     <span class="co"># combine NAs with the train set to preserve matrix size</span>
+
+<span class="co"># convert to wide matrix format</span>
+<span class="co"># convert training set from long to wide matrix and fill with NAs</span>
+train_wide &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">long_to_wide</span>(train, <span class="ot">NA</span>)
+train_wide &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">convert_to_matrix</span>(train_wide) 
+<span class="co"># convert testing set from long to wide matrix and fill with NAs</span>
+test_wide &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">long_to_wide</span>(test_long, <span class="ot">NA</span>)      
+test_wide &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">convert_to_matrix</span>(test_wide)
+
+<span class="co"># let's take a look at ratings for a for a selection of readers and books</span>
+demo &lt;-<span class="st"> </span>train_wide[<span class="kw">c</span>(<span class="st">&quot;23872&quot;</span>,<span class="st">&quot;63360&quot;</span>,<span class="st">&quot;98783&quot;</span>,<span class="st">&quot;16795&quot;</span>, <span class="st">&quot;11676&quot;</span>),
+     <span class="kw">c</span>(<span class="st">&quot;1st to die: a novel&quot;</span>,<span class="st">&quot;angela's ashes&quot;</span>, <span class="st">&quot;black and blue&quot;</span>,
+       <span class="st">&quot;fahrenheit 451&quot;</span>, <span class="st">&quot;hannibal&quot;</span>, <span class="st">&quot;silence of the lambs&quot;</span>,
+       <span class="st">&quot;interview with the vampire&quot;</span>, <span class="st">&quot;stones from the river&quot;</span>, 
+       <span class="st">&quot;the fellowship of the ring (the lord of the rings, part 1)&quot;</span>,
+       <span class="st">&quot;the horse whisperer&quot;</span>,<span class="st">&quot;the vampire lestat (vampire chronicles, book ii)&quot;</span>)]
+<span class="co"># let's transpose it to make it easier to display</span>
+<span class="kw">t</span>(demo)
+<span class="co">#&gt;                                                            23872 63360</span>
+<span class="co">#&gt; 1st to die: a novel                                           NA    NA</span>
+<span class="co">#&gt; angela's ashes                                                NA    NA</span>
+<span class="co">#&gt; black and blue                                                NA    NA</span>
+<span class="co">#&gt; fahrenheit 451                                                 9    NA</span>
+<span class="co">#&gt; hannibal                                                      NA    NA</span>
+<span class="co">#&gt; silence of the lambs                                          10     9</span>
+<span class="co">#&gt; interview with the vampire                                     9     9</span>
+<span class="co">#&gt; stones from the river                                          8    NA</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)    10    NA</span>
+<span class="co">#&gt; the horse whisperer                                           NA    NA</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)              NA     8</span>
+<span class="co">#&gt;                                                            98783 16795</span>
+<span class="co">#&gt; 1st to die: a novel                                           NA    NA</span>
+<span class="co">#&gt; angela's ashes                                                NA    NA</span>
+<span class="co">#&gt; black and blue                                                NA     5</span>
+<span class="co">#&gt; fahrenheit 451                                                NA     8</span>
+<span class="co">#&gt; hannibal                                                      NA     5</span>
+<span class="co">#&gt; silence of the lambs                                          NA    NA</span>
+<span class="co">#&gt; interview with the vampire                                    NA    NA</span>
+<span class="co">#&gt; stones from the river                                         NA     7</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)     9     8</span>
+<span class="co">#&gt; the horse whisperer                                           NA    NA</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)               8    NA</span>
+<span class="co">#&gt;                                                            11676</span>
+<span class="co">#&gt; 1st to die: a novel                                           10</span>
+<span class="co">#&gt; angela's ashes                                                 7</span>
+<span class="co">#&gt; black and blue                                                 7</span>
+<span class="co">#&gt; fahrenheit 451                                                NA</span>
+<span class="co">#&gt; hannibal                                                       8</span>
+<span class="co">#&gt; silence of the lambs                                          NA</span>
+<span class="co">#&gt; interview with the vampire                                     6</span>
+<span class="co">#&gt; stones from the river                                          4</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)    NA</span>
+<span class="co">#&gt; the horse whisperer                                            1</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)               8</span>
+
+<span class="kw">dim</span>(train_wide)  <span class="co"># 7503</span>
+<span class="co">#&gt; [1] 7503  149</span>
+<span class="kw">dim</span>(test_wide)   <span class="co"># 2687</span>
+<span class="co">#&gt; [1] 2687  149</span></code></pre></div>
+</div>
+<div id="train-a-few-models-and-evaulate-their-performance-on-the-training-and-testing-validation-set" class="section level3">
+<h3>3. Train a few models and evaulate their performance on the training and testing (validation) set</h3>
+<p>The NNLM:nnmf function is useful to quickly build models, evaluate errors and make predictions. The <code>mf_ ...</code> collection of functions therefore build on top of this by setting some of the parameters we are interested in such as <code>method</code> = ‘scd’, <code>loss</code> = ‘mse’, <code>check.k</code> = FALSE.</p>
+<p>The idea is to be able to quickly iterate between building the model with the <code>mf_model_build</code> function, assess the accuracy with the <code>mf_model_rmse</code> function and either rebuild or predict using the <code>mf_predict</code> function.</p>
+<div id="a-simple-model-without-l2-regularisation-or-bias" class="section level4">
+<h4>3.1. A simple model, without L2 regularisation or Bias</h4>
+<p>We will start with a simple model, without L2 regularisation and without Bias, and experiment with a few values of k, the number of latent factors. Latent factors summarise characteristics in the data that pertain to readers and books. For example, readers latent factors may be related to their demographics (age, culture, reading proficiency, etc.) and books latent factors may be related to a genre (classical, thriller, science fiction, etc.).</p>
+<p>We are interested in observing the effect on the test RMSE as k changes. The model was trained with 80% of the data and the test RMSE represents the error on unseen observations. A relatively low RMSE and high test RMSE indicates overfitting (high variance, low bias) as the model performs well on the given data but less well on out of sample data. Ideally, we should pick the model that minimises the RMSE on the training set because we need to cater for new readers as well as existing readers.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">set.seed</span>(<span class="dv">123</span>)
+
+rmse_model &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dv">0</span>, <span class="dt">nrow =</span> <span class="dv">4</span>, <span class="dt">ncol =</span> <span class="dv">3</span>)
+
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">4</span>){ 
+  
+model &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_build</span>(train_wide, <span class="dt">k_latent =</span> i, 
+                         <span class="dt">alpha =</span> <span class="dv">0</span>, <span class="dt">beta =</span> <span class="dv">0</span>, 
+                         <span class="dt">bias =</span> <span class="st">&quot;FALSE&quot;</span>)
+
+rmse_model[i,] &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_rmse</span>(model, train_wide, test_wide)
+<span class="kw">colnames</span>(rmse_model) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;rmse_train&quot;</span>, <span class="st">&quot;rmse_test&quot;</span>, <span class="st">&quot;rmse_all&quot;</span>)
+  
+}
+
+rmse_model
+<span class="co">#&gt;   rmse_train rmse_test rmse_all</span>
+<span class="co">#&gt; 1  1.0522278  1.974001 1.052334</span>
+<span class="co">#&gt; 2  0.8392506       NaN      NaN</span>
+<span class="co">#&gt; 3  0.6635618 18.624819      NaN</span>
+<span class="co">#&gt; 4  0.6549651       NaN      NaN</span></code></pre></div>
+<p>We can see that as k increases the RMSE on the training set decreases however RMSE on the test set increases or becomes unmeasurable. k=1 seems like the best choice so far (lowest RMSE test).</p>
+<p>This is likely to be because there are 3631 readers that have only rated 1 book so it is difficult for the model to learn a pattern from 1 observation.</p>
+</div>
+<div id="adding-l2-regularisation" class="section level4">
+<h4>3.1. Adding L2 regularisation</h4>
+<p>Now we will add L2 regularisation by setting <code>alpha</code> and <code>beta</code> in the <code>mf_model_build</code> function. We will try low values of <code>alpha</code> and <code>beta</code>, high values of <code>alpha</code> and <code>beta</code>. The arbitrary numbers we have picked for are: low of 0.0000001 (1e-07), middle of 1, high of 5. Again, we are interested in observing the effect on the training RMSE and lower is better.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">set.seed</span>(<span class="dv">123</span>)
+
+rmse_model &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dv">0</span>, <span class="dt">nrow =</span> <span class="dv">5</span>, <span class="dt">ncol =</span> <span class="dv">3</span>)
+
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>){ 
+  
+model &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_build</span>(train_wide, <span class="dt">k_latent =</span> <span class="dv">1</span>, 
+                         <span class="dt">alpha =</span> i, <span class="dt">beta =</span> i, 
+                         <span class="dt">bias =</span> <span class="st">&quot;FALSE&quot;</span>)
+
+rmse_model[i,] &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_rmse</span>(model, train_wide, test_wide)
+<span class="kw">colnames</span>(rmse_model) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;rmse_train&quot;</span>, <span class="st">&quot;rmse_test&quot;</span>, <span class="st">&quot;rmse_all&quot;</span>)
+  
+}
+
+rmse_model
+<span class="co">#&gt;   rmse_train rmse_test rmse_all</span>
+<span class="co">#&gt; 1   1.057087  4.176680 1.057206</span>
+<span class="co">#&gt; 2   1.070101  4.175219 1.070209</span>
+<span class="co">#&gt; 3   1.090081  4.176029 1.090160</span>
+<span class="co">#&gt; 4   1.116248  4.178685 1.116285</span>
+<span class="co">#&gt; 5   1.146300  4.182568 1.146273</span></code></pre></div>
+<p>We can see that as <code>alpha</code> and <code>beta</code> increase, the RMSE on the training set mostly increases however RMSE on the test set mostly decreases. <code>alpha</code> = <code>beta</code> = 1 seems like the best choice (lowest RMSE test) but the RMSE test is still higher than the simpler model so there is no benefit in adding L2 Regularisation .</p>
+<p>We set k = 1 but now let’s set <code>alpha</code> = <code>beta</code> = 1 and vary k.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">set.seed</span>(<span class="dv">123</span>)
+
+rmse_model &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dv">0</span>, <span class="dt">nrow =</span> <span class="dv">8</span>, <span class="dt">ncol =</span> <span class="dv">3</span>)
+
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">8</span>){ 
+  
+model &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_build</span>(train_wide, <span class="dt">k_latent =</span> i, 
+                         <span class="dt">alpha =</span> <span class="dv">1</span>, <span class="dt">beta =</span> <span class="dv">1</span>, 
+                         <span class="dt">bias =</span> <span class="st">&quot;FALSE&quot;</span>)
+
+rmse_model[i,] &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_rmse</span>(model, train_wide, test_wide)
+<span class="kw">colnames</span>(rmse_model) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;rmse_train&quot;</span>, <span class="st">&quot;rmse_test&quot;</span>, <span class="st">&quot;rmse_all&quot;</span>)
+  
+}
+
+rmse_model
+<span class="co">#&gt;   rmse_train rmse_test  rmse_all</span>
+<span class="co">#&gt; 1  1.0570867  4.176680 1.0572059</span>
+<span class="co">#&gt; 2  0.7767558  4.283175 0.7772240</span>
+<span class="co">#&gt; 3  0.5953413  4.426644 0.5956412</span>
+<span class="co">#&gt; 4  0.4610610  4.549912 0.4611778</span>
+<span class="co">#&gt; 5  0.3407974  4.528776 0.3409231</span>
+<span class="co">#&gt; 6  0.2749838  4.485833 0.2757976</span>
+<span class="co">#&gt; 7  0.2031188  4.485122 0.2032014</span>
+<span class="co">#&gt; 8  0.1729444  4.551678 0.1730980</span></code></pre></div>
+<p>No luck. k=1 still gives the lowest test RMSE but we have seen better results earlier on.</p>
+</div>
+<div id="adding-bias" class="section level4">
+<h4>3.2. Adding Bias</h4>
+<p>Bias is used to downweight the effect of someone who only rates high or only rates low so that they contribute less to the overall scores and have less influence on the predictions. We will experiement without L2, with Bias and for a few values of k.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">set.seed</span>(<span class="dv">123</span>)
+
+rmse_model &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dv">0</span>, <span class="dt">nrow =</span> <span class="dv">6</span>, <span class="dt">ncol =</span> <span class="dv">3</span>)
+
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">3</span>){ 
+  
+model &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_build</span>(train_wide, <span class="dt">k_latent =</span> i, 
+                         <span class="dt">alpha =</span> <span class="dv">0</span>, <span class="dt">beta =</span> <span class="dv">0</span>, 
+                         <span class="dt">bias =</span> <span class="st">&quot;TRUE&quot;</span>)           
+<span class="co"># the function is designed to make it easy to add Bias</span>
+
+rmse_model[i,] &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_rmse</span>(model, train_wide, test_wide)
+<span class="kw">colnames</span>(rmse_model) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;rmse_train&quot;</span>, <span class="st">&quot;rmse_test&quot;</span>, <span class="st">&quot;rmse_all&quot;</span>)
+  
+}
+
+rmse_model
+<span class="co">#&gt;   rmse_train rmse_test  rmse_all</span>
+<span class="co">#&gt; 1  0.8103794  2.698192 0.8110166</span>
+<span class="co">#&gt; 2  0.8967823       NaN       NaN</span>
+<span class="co">#&gt; 3  0.4754526       NaN       NaN</span></code></pre></div>
+<p>k=1 gives the lowest test RMSE but we have seen better results earlier on.</p>
+</div>
+<div id="adding-l2-regularisation-and-bias" class="section level4">
+<h4>3.2. Adding L2 regularisation and Bias</h4>
+<p>Let’s add L2 regularisation and bias at the same time:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">set.seed</span>(<span class="dv">123</span>)
+
+rmse_model &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dv">0</span>, <span class="dt">nrow =</span> <span class="dv">8</span>, <span class="dt">ncol =</span> <span class="dv">3</span>)
+
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">8</span>){ 
+  
+model &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_build</span>(train_wide, <span class="dt">k_latent =</span> <span class="dv">1</span>, 
+                         <span class="dt">alpha =</span> i, <span class="dt">beta =</span> i, 
+                         <span class="dt">bias =</span> <span class="st">&quot;TRUE&quot;</span>)           
+<span class="co"># the function is designed to make it easy to add Bias</span>
+
+rmse_model[i,] &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_rmse</span>(model, train_wide, test_wide)
+<span class="kw">colnames</span>(rmse_model) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;rmse_train&quot;</span>, <span class="st">&quot;rmse_test&quot;</span>, <span class="st">&quot;rmse_all&quot;</span>)
+  
+}
+
+rmse_model
+<span class="co">#&gt;   rmse_train rmse_test rmse_all</span>
+<span class="co">#&gt; 1   1.008555  2.376003 1.008639</span>
+<span class="co">#&gt; 2   1.060308  2.141626 1.060528</span>
+<span class="co">#&gt; 3   1.095021  2.124378 1.095133</span>
+<span class="co">#&gt; 4   1.129063  2.106769 1.129079</span>
+<span class="co">#&gt; 5   1.164006  2.097045 1.163942</span>
+<span class="co">#&gt; 6   1.199757  2.095259 1.199619</span>
+<span class="co">#&gt; 7   1.238439  2.097550 1.238218</span>
+<span class="co">#&gt; 8   1.277896  2.103709 1.277599</span></code></pre></div>
+<p>We see an improvement for <code>alpha</code> = <code>beta</code> = 6. Now let’s set <code>alpha</code> = <code>beta</code> = 6 and vary k.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="kw">set.seed</span>(<span class="dv">123</span>)
+
+rmse_model &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dv">0</span>, <span class="dt">nrow =</span> <span class="dv">5</span>, <span class="dt">ncol =</span> <span class="dv">3</span>)
+
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">5</span>){ 
+  
+model &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_build</span>(train_wide, <span class="dt">k_latent =</span> i, 
+                         <span class="dt">alpha =</span> <span class="dv">6</span>, <span class="dt">beta =</span> <span class="dv">6</span>, 
+                         <span class="dt">bias =</span> <span class="st">&quot;TRUE&quot;</span>)           
+<span class="co"># the function is designed to make it easy to add Bias</span>
+
+rmse_model[i,] &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_rmse</span>(model, train_wide, test_wide)
+<span class="kw">colnames</span>(rmse_model) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;rmse_train&quot;</span>, <span class="st">&quot;rmse_test&quot;</span>, <span class="st">&quot;rmse_all&quot;</span>)
+  
+}
+
+rmse_model
+<span class="co">#&gt;   rmse_train rmse_test  rmse_all</span>
+<span class="co">#&gt; 1  1.1997571  2.095259 1.1996185</span>
+<span class="co">#&gt; 2  1.0304643  2.195933 1.0304171</span>
+<span class="co">#&gt; 3  0.9423791  2.289562 0.9422561</span>
+<span class="co">#&gt; 4  0.8784809  2.284421 0.8783425</span>
+<span class="co">#&gt; 5  0.8403245  2.319756 0.8401407</span></code></pre></div>
+<p>It doesn’t seem like we are able to get a lower test RMSE than the very first simple model with no L2 regularisation and no Bias (1.052). We will now use that model to make predictions.</p>
+</div>
+</div>
+<div id="model-selection" class="section level3">
+<h3>4. Model Selection</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># save the final model so that we can use it to make predictions</span>
+model_final &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_model_build</span>(train_wide, <span class="dt">k_latent =</span> <span class="dv">1</span>, 
+                         <span class="dt">alpha =</span> <span class="dv">0</span>, <span class="dt">beta =</span> <span class="dv">0</span>, 
+                         <span class="dt">bias =</span> <span class="st">&quot;FALSE&quot;</span>)</code></pre></div>
+</div>
+<div id="model-predictions" class="section level3">
+<h3>5. Model Predictions</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># make predictions</span>
+predictions &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">mf_predict</span>(model_final)
+
+<span class="co"># here's a recap of the ratings of a selection of users we looked at earlier</span>
+<span class="kw">t</span>(demo)
+<span class="co">#&gt;                                                            23872 63360</span>
+<span class="co">#&gt; 1st to die: a novel                                           NA    NA</span>
+<span class="co">#&gt; angela's ashes                                                NA    NA</span>
+<span class="co">#&gt; black and blue                                                NA    NA</span>
+<span class="co">#&gt; fahrenheit 451                                                 9    NA</span>
+<span class="co">#&gt; hannibal                                                      NA    NA</span>
+<span class="co">#&gt; silence of the lambs                                          10     9</span>
+<span class="co">#&gt; interview with the vampire                                     9     9</span>
+<span class="co">#&gt; stones from the river                                          8    NA</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)    10    NA</span>
+<span class="co">#&gt; the horse whisperer                                           NA    NA</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)              NA     8</span>
+<span class="co">#&gt;                                                            98783 16795</span>
+<span class="co">#&gt; 1st to die: a novel                                           NA    NA</span>
+<span class="co">#&gt; angela's ashes                                                NA    NA</span>
+<span class="co">#&gt; black and blue                                                NA     5</span>
+<span class="co">#&gt; fahrenheit 451                                                NA     8</span>
+<span class="co">#&gt; hannibal                                                      NA     5</span>
+<span class="co">#&gt; silence of the lambs                                          NA    NA</span>
+<span class="co">#&gt; interview with the vampire                                    NA    NA</span>
+<span class="co">#&gt; stones from the river                                         NA     7</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)     9     8</span>
+<span class="co">#&gt; the horse whisperer                                           NA    NA</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)               8    NA</span>
+<span class="co">#&gt;                                                            11676</span>
+<span class="co">#&gt; 1st to die: a novel                                           10</span>
+<span class="co">#&gt; angela's ashes                                                 7</span>
+<span class="co">#&gt; black and blue                                                 7</span>
+<span class="co">#&gt; fahrenheit 451                                                NA</span>
+<span class="co">#&gt; hannibal                                                       8</span>
+<span class="co">#&gt; silence of the lambs                                          NA</span>
+<span class="co">#&gt; interview with the vampire                                     6</span>
+<span class="co">#&gt; stones from the river                                          4</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1)    NA</span>
+<span class="co">#&gt; the horse whisperer                                            1</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)               8</span>
+
+<span class="co"># let's compare that to the model predicitons</span>
+<span class="kw">t</span>(predictions[<span class="kw">c</span>(<span class="st">&quot;23872&quot;</span>,<span class="st">&quot;63360&quot;</span>,<span class="st">&quot;98783&quot;</span>,<span class="st">&quot;16795&quot;</span>, <span class="st">&quot;11676&quot;</span>),
+     <span class="kw">c</span>(<span class="st">&quot;1st to die: a novel&quot;</span>,<span class="st">&quot;angela's ashes&quot;</span>, <span class="st">&quot;black and blue&quot;</span>,
+       <span class="st">&quot;fahrenheit 451&quot;</span>, <span class="st">&quot;hannibal&quot;</span>, <span class="st">&quot;silence of the lambs&quot;</span>,
+       <span class="st">&quot;interview with the vampire&quot;</span>, <span class="st">&quot;stones from the river&quot;</span>, 
+       <span class="st">&quot;the fellowship of the ring (the lord of the rings, part 1)&quot;</span>,
+       <span class="st">&quot;the horse whisperer&quot;</span>,<span class="st">&quot;the vampire lestat (vampire chronicles, book ii)&quot;</span>)])
+<span class="co">#&gt;                                                               23872</span>
+<span class="co">#&gt; 1st to die: a novel                                        8.180973</span>
+<span class="co">#&gt; angela's ashes                                             8.478958</span>
+<span class="co">#&gt; black and blue                                             7.384316</span>
+<span class="co">#&gt; fahrenheit 451                                             8.780885</span>
+<span class="co">#&gt; hannibal                                                   7.533787</span>
+<span class="co">#&gt; silence of the lambs                                       8.757285</span>
+<span class="co">#&gt; interview with the vampire                                 8.044091</span>
+<span class="co">#&gt; stones from the river                                      8.271573</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1) 8.828326</span>
+<span class="co">#&gt; the horse whisperer                                        7.608024</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)           8.373942</span>
+<span class="co">#&gt;                                                               63360</span>
+<span class="co">#&gt; 1st to die: a novel                                        8.438992</span>
+<span class="co">#&gt; angela's ashes                                             8.746375</span>
+<span class="co">#&gt; black and blue                                             7.617210</span>
+<span class="co">#&gt; fahrenheit 451                                             9.057825</span>
+<span class="co">#&gt; hannibal                                                   7.771395</span>
+<span class="co">#&gt; silence of the lambs                                       9.033481</span>
+<span class="co">#&gt; interview with the vampire                                 8.297793</span>
+<span class="co">#&gt; stones from the river                                      8.532450</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1) 9.106762</span>
+<span class="co">#&gt; the horse whisperer                                        7.847973</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)           8.638048</span>
+<span class="co">#&gt;                                                               98783</span>
+<span class="co">#&gt; 1st to die: a novel                                        7.875010</span>
+<span class="co">#&gt; angela's ashes                                             8.161850</span>
+<span class="co">#&gt; black and blue                                             7.108148</span>
+<span class="co">#&gt; fahrenheit 451                                             8.452486</span>
+<span class="co">#&gt; hannibal                                                   7.252028</span>
+<span class="co">#&gt; silence of the lambs                                       8.429769</span>
+<span class="co">#&gt; interview with the vampire                                 7.743247</span>
+<span class="co">#&gt; stones from the river                                      7.962222</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1) 8.498153</span>
+<span class="co">#&gt; the horse whisperer                                        7.323490</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)           8.060763</span>
+<span class="co">#&gt;                                                               16795</span>
+<span class="co">#&gt; 1st to die: a novel                                        7.912938</span>
+<span class="co">#&gt; angela's ashes                                             8.201159</span>
+<span class="co">#&gt; black and blue                                             7.142382</span>
+<span class="co">#&gt; fahrenheit 451                                             8.493194</span>
+<span class="co">#&gt; hannibal                                                   7.286955</span>
+<span class="co">#&gt; silence of the lambs                                       8.470368</span>
+<span class="co">#&gt; interview with the vampire                                 7.780540</span>
+<span class="co">#&gt; stones from the river                                      8.000570</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1) 8.539081</span>
+<span class="co">#&gt; the horse whisperer                                        7.358761</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)           8.099585</span>
+<span class="co">#&gt;                                                               11676</span>
+<span class="co">#&gt; 1st to die: a novel                                        8.051553</span>
+<span class="co">#&gt; angela's ashes                                             8.344823</span>
+<span class="co">#&gt; black and blue                                             7.267499</span>
+<span class="co">#&gt; fahrenheit 451                                             8.641974</span>
+<span class="co">#&gt; hannibal                                                   7.414605</span>
+<span class="co">#&gt; silence of the lambs                                       8.618748</span>
+<span class="co">#&gt; interview with the vampire                                 7.916836</span>
+<span class="co">#&gt; stones from the river                                      8.140720</span>
+<span class="co">#&gt; the fellowship of the ring (the lord of the rings, part 1) 8.688665</span>
+<span class="co">#&gt; the horse whisperer                                        7.487668</span>
+<span class="co">#&gt; the vampire lestat (vampire chronicles, book ii)           8.241470</span></code></pre></div>
+<p>Some are close such as reader <code>23872</code> who rated “fahrenheit 451” at 9 and the prediction is 8.78. Some are not so close such as reader <code>11676</code> who rated “the horse whisperer” 1 and the prediction is 7.48.</p>
+</div>
+<div id="recommendations-based-on-model-predictions" class="section level3">
+<h3>6. Recommendations based on Model Predictions</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+user &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;23872&quot;</span>,<span class="st">&quot;63360&quot;</span>,<span class="st">&quot;98783&quot;</span>,<span class="st">&quot;16795&quot;</span>, <span class="st">&quot;11676&quot;</span>)
+used &lt;-<span class="st"> </span>book_ratings_with_names_deduped[user,]
+
+ratings_wide &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">long_to_wide</span>(book_ratings_with_names_deduped, <span class="ot">NA</span>)
+ratings_wide &lt;-<span class="st"> </span>cf<span class="op">::</span><span class="kw">convert_to_matrix</span>(ratings_wide)
+
+<span class="co"># for 1 user</span>
+<span class="kw">mf_recommend</span>(<span class="dt">user =</span> <span class="st">&quot;23872&quot;</span>, predictions, ratings_wide, <span class="dt">predict_n =</span> <span class="dv">10</span>)
+<span class="co">#&gt;                                                               title</span>
+<span class="co">#&gt; 1                                    seabiscuit: an american legend</span>
+<span class="co">#&gt; 2                                             to kill a mockingbird</span>
+<span class="co">#&gt; 3  harry potter and the sorcerer's stone (harry potter (paperback))</span>
+<span class="co">#&gt; 4                harry potter and the order of the phoenix (book 5)</span>
+<span class="co">#&gt; 5                                                    watership down</span>
+<span class="co">#&gt; 6      the hobbit : the enchanting prelude to the lord of the rings</span>
+<span class="co">#&gt; 7          fast food nation: the dark side of the all-american meal</span>
+<span class="co">#&gt; 8                                          the pillars of the earth</span>
+<span class="co">#&gt; 9                                                 the da vinci code</span>
+<span class="co">#&gt; 10                 harry potter and the chamber of secrets (book 2)</span>
+<span class="co">#&gt;       score</span>
+<span class="co">#&gt; 1  9.360905</span>
+<span class="co">#&gt; 2  9.214259</span>
+<span class="co">#&gt; 3  9.157607</span>
+<span class="co">#&gt; 4  8.979742</span>
+<span class="co">#&gt; 5  8.961728</span>
+<span class="co">#&gt; 6  8.866386</span>
+<span class="co">#&gt; 7  8.843778</span>
+<span class="co">#&gt; 8  8.831080</span>
+<span class="co">#&gt; 9  8.797089</span>
+<span class="co">#&gt; 10 8.787611</span>
+
+<span class="co"># for all the other demo users:</span>
+<span class="kw">lapply</span>(<span class="kw">c</span>(<span class="st">&quot;63360&quot;</span>,<span class="st">&quot;98783&quot;</span>,<span class="st">&quot;16795&quot;</span>, <span class="st">&quot;11676&quot;</span>), mf_recommend, 
+       predictions, ratings_wide, <span class="dt">predict_n =</span> <span class="dv">10</span>)
+<span class="co">#&gt; [[1]]</span>
+<span class="co">#&gt;                                                               title</span>
+<span class="co">#&gt; 1                                    seabiscuit: an american legend</span>
+<span class="co">#&gt; 2                                             to kill a mockingbird</span>
+<span class="co">#&gt; 3  harry potter and the sorcerer's stone (harry potter (paperback))</span>
+<span class="co">#&gt; 4                                           a prayer for owen meany</span>
+<span class="co">#&gt; 5                harry potter and the order of the phoenix (book 5)</span>
+<span class="co">#&gt; 6                                                    watership down</span>
+<span class="co">#&gt; 7      the hobbit : the enchanting prelude to the lord of the rings</span>
+<span class="co">#&gt; 8          fast food nation: the dark side of the all-american meal</span>
+<span class="co">#&gt; 9                                          the pillars of the earth</span>
+<span class="co">#&gt; 10                                                the da vinci code</span>
+<span class="co">#&gt;       score</span>
+<span class="co">#&gt; 1  9.656139</span>
+<span class="co">#&gt; 2  9.504867</span>
+<span class="co">#&gt; 3  9.446428</span>
+<span class="co">#&gt; 4  9.321381</span>
+<span class="co">#&gt; 5  9.262954</span>
+<span class="co">#&gt; 6  9.244371</span>
+<span class="co">#&gt; 7  9.146023</span>
+<span class="co">#&gt; 8  9.122701</span>
+<span class="co">#&gt; 9  9.109603</span>
+<span class="co">#&gt; 10 9.074540</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[2]]</span>
+<span class="co">#&gt;                                                               title</span>
+<span class="co">#&gt; 1                                    seabiscuit: an american legend</span>
+<span class="co">#&gt; 2                                             to kill a mockingbird</span>
+<span class="co">#&gt; 3  harry potter and the sorcerer's stone (harry potter (paperback))</span>
+<span class="co">#&gt; 4                                           a prayer for owen meany</span>
+<span class="co">#&gt; 5                harry potter and the order of the phoenix (book 5)</span>
+<span class="co">#&gt; 6                                                    watership down</span>
+<span class="co">#&gt; 7      the hobbit : the enchanting prelude to the lord of the rings</span>
+<span class="co">#&gt; 8          fast food nation: the dark side of the all-american meal</span>
+<span class="co">#&gt; 9                                          the pillars of the earth</span>
+<span class="co">#&gt; 10                                                the da vinci code</span>
+<span class="co">#&gt;       score</span>
+<span class="co">#&gt; 1  9.010814</span>
+<span class="co">#&gt; 2  8.869652</span>
+<span class="co">#&gt; 3  8.815119</span>
+<span class="co">#&gt; 4  8.698429</span>
+<span class="co">#&gt; 5  8.643906</span>
+<span class="co">#&gt; 6  8.626565</span>
+<span class="co">#&gt; 7  8.534790</span>
+<span class="co">#&gt; 8  8.513027</span>
+<span class="co">#&gt; 9  8.500804</span>
+<span class="co">#&gt; 10 8.468084</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[3]]</span>
+<span class="co">#&gt;                                                               title</span>
+<span class="co">#&gt; 1                                    seabiscuit: an american legend</span>
+<span class="co">#&gt; 2                                             to kill a mockingbird</span>
+<span class="co">#&gt; 3  harry potter and the sorcerer's stone (harry potter (paperback))</span>
+<span class="co">#&gt; 4                                           a prayer for owen meany</span>
+<span class="co">#&gt; 5                harry potter and the order of the phoenix (book 5)</span>
+<span class="co">#&gt; 6      the hobbit : the enchanting prelude to the lord of the rings</span>
+<span class="co">#&gt; 7          fast food nation: the dark side of the all-american meal</span>
+<span class="co">#&gt; 8                                          the pillars of the earth</span>
+<span class="co">#&gt; 9                  harry potter and the chamber of secrets (book 2)</span>
+<span class="co">#&gt; 10                                             silence of the lambs</span>
+<span class="co">#&gt;       score</span>
+<span class="co">#&gt; 1  9.054212</span>
+<span class="co">#&gt; 2  8.912370</span>
+<span class="co">#&gt; 3  8.857574</span>
+<span class="co">#&gt; 4  8.740322</span>
+<span class="co">#&gt; 5  8.685537</span>
+<span class="co">#&gt; 6  8.575895</span>
+<span class="co">#&gt; 7  8.554027</span>
+<span class="co">#&gt; 8  8.541745</span>
+<span class="co">#&gt; 9  8.499700</span>
+<span class="co">#&gt; 10 8.470368</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; [[4]]</span>
+<span class="co">#&gt;                                                           title    score</span>
+<span class="co">#&gt; 1                                         to kill a mockingbird 9.068493</span>
+<span class="co">#&gt; 2            harry potter and the order of the phoenix (book 5) 8.837686</span>
+<span class="co">#&gt; 3  the hobbit : the enchanting prelude to the lord of the rings 8.726123</span>
+<span class="co">#&gt; 4                                      the pillars of the earth 8.691375</span>
+<span class="co">#&gt; 5    the fellowship of the ring (the lord of the rings, part 1) 8.688665</span>
+<span class="co">#&gt; 6                                                fahrenheit 451 8.641974</span>
+<span class="co">#&gt; 7                                          silence of the lambs 8.618748</span>
+<span class="co">#&gt; 8                                       the secret life of bees 8.613704</span>
+<span class="co">#&gt; 9                                      prodigal summer: a novel 8.564954</span>
+<span class="co">#&gt; 10                                           bel canto: a novel 8.538465</span></code></pre></div>
+</div>
+<div id="recommendations-for-a-new-user" class="section level3">
+<h3>7. Recommendations for a new user</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">
+<span class="co"># create data for new users</span>
+users_new &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">User.ID =</span> (<span class="kw">rep</span>(<span class="kw">max</span>(book_ratings<span class="op">$</span>User.ID)<span class="op">+</span><span class="dv">1</span>,<span class="dv">3</span>)), 
+                        <span class="dt">ISBN =</span> <span class="kw">c</span>(<span class="st">&quot;0440234743&quot;</span>, <span class="st">&quot;0971880107&quot;</span>, <span class="st">&quot;0345417623&quot;</span>), 
+                        <span class="dt">Book.Rating =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">3</span>))
+
+<span class="co"># remove ISBN and add Book.Title</span>
+users_new &lt;-<span class="st"> </span>users_new <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">left_join</span>(book_info, <span class="dt">by =</span> <span class="st">&quot;ISBN&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(User.ID,Book.Title,Book.Rating)
+<span class="co">#&gt; Warning: Column `ISBN` joining factor and character vector, coercing into</span>
+<span class="co">#&gt; character vector</span></code></pre></div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
